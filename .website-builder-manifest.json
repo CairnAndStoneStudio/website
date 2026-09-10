@@ -1,0 +1,11 @@
+{
+  "files": {
+    ".nojekyll": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "_headers": "7be1b4126e32d68b843d0cefe459d612a474ccee5f4311d0f010b5b30482cb30",
+    "assets/styles.css": "cc10d8464ad7dbc59a8ec4587cf8030667ff30c5be2b0758fe9ba19fe054c111",
+    "index.html": "d951255c3a0666cea83824d60eb167ee77aac6a55a95139390494b888c382606",
+    "privacy/index.html": "c6454befe3395a8bd0ce018969ba566caecab5dd215c64d58ec67bc0c6350874",
+    "privacy/scaletap/index.html": "2020bc60b1367aec078ac274a4bb0a9bd033d1f20f2a482872dcac64053e201c"
+  },
+  "generator": "website-builder"
+}
