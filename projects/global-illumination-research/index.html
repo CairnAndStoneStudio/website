@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src &#x27;none&#x27;; script-src &#x27;self&#x27;; style-src &#x27;self&#x27;; img-src &#x27;self&#x27;; base-uri &#x27;none&#x27;; form-action &#x27;none&#x27;; object-src &#x27;none&#x27;">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Global illumination research at Université Paris-Est Marne-la-Vallée: virtual point lights, Lightcuts and shadow methods on CPU and GPU.">
+    <title>CPU/GPU global illumination research — Cairn and Stone Studio</title>
+    <link rel="canonical" href="https://cairnandstone.studio/projects/global-illumination-research/">
+    <link rel="stylesheet" href="../../assets/styles.css">
+    <link rel="icon" type="image/svg+xml" href="../../assets/media/logos/cairn-and-stone.svg">
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+      <div class="shell">
+        <a class="brand" href="../../">
+          <img class="brand-mark" src="../../assets/media/logos/cairn-and-stone.svg" alt="" aria-hidden="true" decoding="async">
+          <span class="brand-text"><span class="brand-name">Cairn and Stone Studio · Mathieu Lagarde</span><span class="brand-role">Senior Software Engineer / Tech Lead</span></span>
+        </a>
+        <nav class="primary-nav" aria-label="Primary navigation"><a href="../../">Home</a><a href="../" aria-current="page">Projects</a><a href="../../expertise/">Expertise</a><a href="../../about/">About</a><a href="../../contact/">Contact</a></nav>
+      </div>
+    </header>
+    <main id="main"><article class="project-detail">
+        <header class="page-intro"><div class="shell">
+          <h1>CPU/GPU global illumination research</h1>
+          <p class="detail-context">Université Paris-Est Marne-la-Vallée · Nov 2012 – Nov 2014 · global illumination research on CPU and GPU</p>
+          <p class="lede detail-summary">A research engineering role at Université Paris-Est Marne-la-Vallée focused on global illumination. I implemented the same rendering approach on CPU and GPU to compare both paths. This work became the foundation for the rendering direction I later continued with DL-Instant.</p>
+        </div></header>
+        <nav class="project-nav" data-project-nav aria-label="Project navigation">
+          <div class="shell project-nav__row">
+            <span class="project-nav__cell project-nav__cell--previous"><a class="project-nav__step" href="../billy-game-prototype/" rel="prev" title="Billy game prototype" aria-label="Previous project: Billy game prototype"><span class="project-nav__arrow">←</span><span class="project-nav__label">Billy game prototype</span></a></span>
+            <span class="project-nav__cell project-nav__cell--home"><a class="project-nav__return" href="../">All projects</a></span>
+            <span class="project-nav__cell project-nav__cell--place"><span class="project-nav__position">9 of 12</span></span>
+            <span class="project-nav__cell project-nav__cell--next"><a class="project-nav__step" href="../online-poker-backend/" rel="next" title="Online poker backend" aria-label="Next project: Online poker backend"><span class="project-nav__label">Online poker backend</span><span class="project-nav__arrow">→</span></a></span>
+          </div>
+        </nav>
+        <section class="band band--paper band--tight"><div class="shell">
+          <section class="detail-section"><h2>What I did</h2><div class="detail-content prose"><p>I implemented virtual point lights in Embree and added the Lightcuts optimisation on top of the VPL method. I built the OpenGL rendering engine and the export path that transfers Embree results into it. The shadowing work covered Shadow Maps, Paraboloid Shadow Maps and Imperfect Shadow Maps.</p></div></section>
+          
+          <section class="detail-section"><h2>Technical proof</h2><div class="detail-content"><ul class="proof-list"><li class="proof-item"><h3 class="proof-label">GPU programming</h3><p class="proof-detail">The same global illumination approach implemented on both CPU and GPU, with virtual point lights in Embree and rendering in OpenGL.</p></li><li class="proof-item"><h3 class="proof-label">3D math</h3><p class="proof-detail">Virtual point lights, the Lightcuts optimisation built on top of them, and ShadowMap, Paraboloid Shadow Map and Imperfect Shadow Map methods.</p></li></ul></div></section>
+          <p class="detail-tech">C++ · Embree · OpenGL / GLSL</p>
+          <p class="detail-contact">Interested in similar work? <a class="button" href="../../contact/">Contact</a></p>
+        </div></section></article></main>
+    <footer class="site-footer"><div class="shell"><p>© 2026 Cairn and Stone Studio — Mathieu Lagarde, Senior Software Engineer / Tech Lead — Game, Simulation &amp; Backend Systems</p><nav aria-label="Utility navigation"><a href="../../legal/">Legal</a> <a href="../../privacy/">Privacy</a> <a href="https://fr.linkedin.com/in/mathieulagarde" rel="me noreferrer">LinkedIn</a></nav></div></footer>
+  </body>
+</html>

@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src &#x27;none&#x27;; script-src &#x27;self&#x27;; style-src &#x27;self&#x27;; img-src &#x27;self&#x27;; base-uri &#x27;none&#x27;; form-action &#x27;none&#x27;; object-src &#x27;none&#x27;">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="CASBureau: a local-first runtime that makes AI-assisted development explicit and reviewable — planned work, bounded agent permissions, independent review and recorded evidence.">
+    <title>CASBureau — Cairn and Stone Studio</title>
+    <link rel="canonical" href="https://cairnandstone.studio/projects/casbureau/">
+    <link rel="stylesheet" href="../../assets/styles.css">
+    <link rel="icon" type="image/svg+xml" href="../../assets/media/logos/cairn-and-stone.svg">
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+      <div class="shell">
+        <a class="brand" href="../../">
+          <img class="brand-mark" src="../../assets/media/logos/cairn-and-stone.svg" alt="" aria-hidden="true" decoding="async">
+          <span class="brand-text"><span class="brand-name">Cairn and Stone Studio · Mathieu Lagarde</span><span class="brand-role">Senior Software Engineer / Tech Lead</span></span>
+        </a>
+        <nav class="primary-nav" aria-label="Primary navigation"><a href="../../">Home</a><a href="../" aria-current="page">Projects</a><a href="../../expertise/">Expertise</a><a href="../../about/">About</a><a href="../../contact/">Contact</a></nav>
+      </div>
+    </header>
+    <main id="main"><article class="project-detail">
+        <header class="page-intro"><div class="shell">
+          <h1>CASBureau</h1>
+          <p class="detail-context">Cairn and Stone Studio · Sep 2026 – present · independent tooling, built outside client work</p>
+          <p class="lede detail-summary">CASBureau is the runtime I built to make AI-assisted development answerable. Models interpret and propose, while the runtime owns task state, execution order and authority. It records what was actually executed and tested, and who reviewed it. Work moves through bounded execution, required validation and independent review in an ordinary Git repository, while intent and scope remain with the human.</p>
+        </div></header>
+        <nav class="project-nav" data-project-nav aria-label="Project navigation">
+          <div class="shell project-nav__row">
+            <span class="project-nav__cell project-nav__cell--previous"><a class="project-nav__step" href="../unreal-engine-cpp-systems/" rel="prev" title="Real-Time Unreal Engine C++ Systems" aria-label="Previous project: Real-Time Unreal Engine C++ Systems"><span class="project-nav__arrow">←</span><span class="project-nav__label">Real-Time Unreal Engine C++ Systems</span></a></span>
+            <span class="project-nav__cell project-nav__cell--home"><a class="project-nav__return" href="../">All projects</a></span>
+            <span class="project-nav__cell project-nav__cell--place"><span class="project-nav__position">2 of 12</span></span>
+            <span class="project-nav__cell project-nav__cell--next"><a class="project-nav__step" href="../spellcaster-chronicles/" rel="next" title="Spellcaster Chronicles" aria-label="Next project: Spellcaster Chronicles"><span class="project-nav__label">Spellcaster Chronicles</span><span class="project-nav__arrow">→</span></a></span>
+          </div>
+        </nav>
+        <section class="band band--paper band--tight"><div class="shell">
+          <section class="detail-section"><h2>What I did</h2><div class="detail-content prose"><p>I designed the workflow and built the runtime that enforces it. Execution is serialized against a working repository so agents operate on a stable source of truth, while independent repositories can run concurrently. Agent permissions are bounded, and an independent review must pass before work can close. Required checks execute as bounded commands rather than relying on an agent's declaration. Their results are recorded as evidence and used to generate the final report.</p></div></section>
+          
+          <section class="detail-section"><h2>Technical proof</h2><div class="detail-content"><ul class="proof-list"><li class="proof-item"><h3 class="proof-label">Agentic development</h3><p class="proof-detail">Specialist roles run in sequence, with an independent review and recorded evidence rather than one agent asked to do everything.</p></li><li class="proof-item"><h3 class="proof-label">Developer tools</h3><p class="proof-detail">A project-neutral runtime and CLI, installable into a consumer repository, with a test suite that runs without consuming model quota.</p></li><li class="proof-item"><h3 class="proof-label">Architecture</h3><p class="proof-detail">Defined the sequential lifecycle and the authority boundaries between agents, model providers and the human; orchestration is explicit, not a model's decision.</p></li><li class="proof-item"><h3 class="proof-label">Reliability</h3><p class="proof-detail">Executed validation, secret redaction and safe recovery built into the lifecycle rather than left to convention.</p></li></ul></div></section>
+          <p class="detail-tech">Python · SQLite</p>
+          <p class="detail-contact">Interested in similar work? <a class="button" href="../../contact/">Contact</a></p>
+        </div></section></article></main>
+    <footer class="site-footer"><div class="shell"><p>© 2026 Cairn and Stone Studio — Mathieu Lagarde, Senior Software Engineer / Tech Lead — Game, Simulation &amp; Backend Systems</p><nav aria-label="Utility navigation"><a href="../../legal/">Legal</a> <a href="../../privacy/">Privacy</a> <a href="https://fr.linkedin.com/in/mathieulagarde" rel="me noreferrer">LinkedIn</a></nav></div></footer>
+  </body>
+</html>

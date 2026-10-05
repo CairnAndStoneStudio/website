@@ -1,0 +1,1223 @@
+/* Cairn and Stone Studio — visual system.
+   Three surfaces (sand / paper / forest), one fluid spacing rhythm, a 12-column editorial grid.
+   No framework, no remote asset: every texture here is CSS or inline SVG. */
+
+:root {
+  color-scheme: light;
+
+  /* Surfaces: hierarchy comes from tone, not from borders. */
+  --sand: #f2efe7;
+  --paper: #faf8f3;
+  --stone-soft: #efeade;
+  --forest: #0f4a3c;
+  --forest-deep: #0b3a2f;
+
+  /* Ink */
+  --ink: #141a17;
+  --ink-soft: #33403a;
+  --muted: #55605a;
+  --muted-light: #6f7a73;
+  --on-forest: #f4f1ea;
+
+  --accent: #14604d;
+  --accent-bright: #2f8f74;
+  --line: #cfc9ba;
+  --line-soft: #ded8c9;
+  --line-ink: rgba(20, 26, 23, .14);
+
+  --max: 76rem;
+  --prose: 44rem;
+  --gutter: clamp(1.25rem, 4vw, 3.25rem);
+  --radius: 3px;
+
+  /* THE STICKY CHROME, MEASURED. `--header-sticky-height` is the global header's own height in the widths where
+     it is sticky, and it exists because a second sticky element has to know where the first one ends. Measured in
+     Chrome on 2026-09-30 at 737, 760, 768, 820, 900, 1024, 1180, 1280 and 1440 px: 68.19 px at every one of them,
+     so the value is a measurement rather than a magic number, and the strip tucks 0.03 px under the header's
+     border by design -- a hair of overlap is invisible, a hair of gap shows content scrolling between them.
+     Below 46rem the header is `position: static`, which is why the token is zero there: the token means "the
+     height of the sticky header at this viewport", and every consumer reads it that way instead of guessing.
+     `--project-nav-height` is the strip's own height, so the focus offset below is computed from the two chrome
+     heights rather than typed as a third constant. */
+  --header-sticky-height: 4.26rem;
+  --project-nav-height: 2.75rem;
+
+  --step--1: clamp(.82rem, .79rem + .12vw, .89rem);
+  --step-0: clamp(1rem, .96rem + .16vw, 1.09rem);
+  --step-1: clamp(1.15rem, 1.08rem + .3vw, 1.35rem);
+  --step-2: clamp(1.4rem, 1.24rem + .7vw, 1.95rem);
+  --step-3: clamp(1.75rem, 1.45rem + 1.3vw, 2.7rem);
+  --step-4: clamp(2.05rem, 1.5rem + 2.4vw, 3.5rem);
+  --step-5: clamp(2.35rem, 1.5rem + 3.6vw, 5.4rem);
+
+  --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, ui-serif, serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+
+  --section: clamp(3.5rem, 6vw, 6rem);
+  --ease: cubic-bezier(.22, .61, .36, 1);
+}
+
+* { box-sizing: border-box; }
+
+html {
+  font-family: var(--sans);
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--sand);
+  color: var(--ink);
+  font-size: var(--step-0);
+  line-height: 1.6;
+  overflow-wrap: break-word;
+  font-synthesis-weight: none;
+}
+
+img, svg { max-width: 100%; }
+img { height: auto; display: block; }
+
+a { color: var(--accent); text-underline-offset: .24em; text-decoration-thickness: .07em; }
+a:hover { color: var(--forest); text-decoration-thickness: .13em; }
+
+:where(a, button, [tabindex]):focus-visible {
+  outline: .18rem solid var(--accent-bright);
+  outline-offset: .22rem;
+  border-radius: 2px;
+}
+
+.skip-link {
+  position: fixed; z-index: 20; top: .75rem; left: .75rem;
+  padding: .7rem 1.05rem; background: var(--forest); color: var(--on-forest);
+  font-weight: 650; text-decoration: none; transform: translateY(-200%);
+  transition: transform .18s var(--ease);
+}
+.skip-link:focus { transform: translateY(0); color: var(--on-forest); }
+
+/* ---------------------------------------------------------------- shell */
+
+.shell {
+  width: min(100% - (var(--gutter) * 2), var(--max));
+  margin-inline: auto;
+}
+
+.site-header {
+  position: sticky; top: 0; z-index: 10;
+  background: color-mix(in srgb, var(--sand) 88%, transparent);
+  backdrop-filter: saturate(150%) blur(10px);
+  border-bottom: 1px solid var(--line-ink);
+}
+.site-header > .shell {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: clamp(1rem, 3vw, 2.5rem); padding-block: .85rem;
+}
+
+/* The identity: a drawn cairn mark plus the studio and its author. */
+.brand { display: inline-flex; align-items: center; gap: .7rem; color: var(--ink); text-decoration: none; }
+.brand-mark { flex: none; width: 1.6rem; height: 1.6rem; }
+.brand-text { display: grid; line-height: 1.15; }
+.brand-name { font-size: .92rem; font-weight: 720; letter-spacing: .01em; }
+.brand-role {
+  font-size: .67rem; font-weight: 620; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--muted-light);
+}
+
+/* ONE ROW, ON EVERY WIDTH THE ROW COMPOSITION IS USED AT (human polish pass, 2026-10-03). This used to be
+   `flex-wrap: wrap`, which let the five destinations break one at a time as the identity beside them grew:
+   measured in Chrome on 2026-10-03 at 1152 and 1024 px, `Contact` was left alone on a second line, the
+   header became 109.78 px tall, and the sticky project strip below it -- pinned at
+   `top: var(--header-sticky-height)`, which is the *one-row* height -- was half-covered by it. The
+   composition is now deliberate at both ends instead of accidental in the middle: one row here, and the
+   stacked identity-over-navigation block in the max-width: 46rem block below, where the whole header
+   switches rather than individual items drifting onto their own lines. */
+.primary-nav { display: flex; flex-wrap: nowrap; gap: .1rem clamp(.35rem, 1.4vw, 1.1rem); }
+.primary-nav a {
+  display: inline-flex; align-items: center; min-height: 2.5rem;
+  padding: .1rem .1rem; color: var(--muted); font-size: .87rem; font-weight: 640;
+  text-decoration: none; border-bottom: 2px solid transparent;
+}
+.primary-nav a:hover { color: var(--ink); border-bottom-color: var(--line); }
+.primary-nav a[aria-current="page"] { color: var(--ink); border-bottom-color: var(--accent); }
+
+main { display: block; }
+
+.site-footer {
+  margin-top: clamp(3rem, 7vw, 6rem);
+  border-top: 1px solid var(--line-ink);
+  background: var(--stone-soft);
+}
+.site-footer > .shell {
+  display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between;
+  gap: 1rem 2rem; padding-block: 1.75rem 2.25rem;
+  color: var(--muted); font-size: var(--step--1);
+}
+.site-footer p { margin: 0; }
+.site-footer nav { display: flex; flex-wrap: wrap; gap: .4rem 1.15rem; }
+.site-footer a { color: var(--muted); text-decoration: none; }
+.site-footer a:hover { color: var(--ink); text-decoration: underline; }
+
+/* ---------------------------------------------------------------- rhythm */
+
+/* A band is one horizontal slice of the page. Tone changes carry the hierarchy
+   that horizontal rules used to carry — so a band never needs a border. */
+.band { padding-block: var(--section); }
+.band--paper { background: var(--paper); }
+.band--tight { padding-block: clamp(2.25rem, 4vw, 3.5rem); }
+/* `.band--stone`, `.band--forest` and `.band--flush-top` were emitted by no page after the Home A2 final
+   refactor (2026-10-02) and are deleted rather than kept as an unused tone system: every band this build
+   writes is a `.band--paper` or a `.band--tight`, and the Home's closing block is its own component rather
+   than a forest band. */
+
+/* ---------------------------------------------------------------- type */
+
+h1, h2, h3, h4 { margin: 0; font-weight: 640; letter-spacing: -.022em; line-height: 1.1; }
+h1 { font-size: var(--step-5); letter-spacing: -.035em; line-height: 1.02; }
+h2 { font-size: var(--step-3); }
+h3 { font-size: var(--step-1); line-height: 1.25; }
+p { margin: 0 0 1rem; }
+p:last-child { margin-bottom: 0; }
+
+.eyebrow {
+  margin: 0 0 .6rem; color: var(--accent); font-size: .72rem; font-weight: 780;
+  letter-spacing: .15em; text-transform: uppercase;
+}
+.lede { font-size: var(--step-1); line-height: 1.5; color: var(--ink-soft); max-width: var(--prose); }
+.prose { max-width: var(--prose); }
+.prose > * + * { margin-top: 1rem; }
+
+/* A section header sits on the grid's left third; its content occupies the rest. */
+.section-head { max-width: 34rem; margin-bottom: clamp(1.75rem, 3.5vw, 2.75rem); }
+.section-head p:not(.eyebrow) { color: var(--muted); margin-bottom: 0; }
+.section-head--wide { max-width: 46rem; }
+
+/* ---------------------------------------------------------------- actions */
+
+/* ONE CTA GRAMMAR, FOUR PLACES (UI coherence pass, 2026-10-04). Four zones close with an action -- the Home's
+   closing block, a project page's last line, the About page's two routes and the Contact page -- and they had
+   drifted into four separate declarations of the same row: `.actions` said `gap: .75rem 1rem`, `.about-actions`
+   said `.6rem`, `.detail-contact` was not a row at all, and the same secondary link was underlined on the
+   Contact page and not on any other. The row is now stated once, here, and the secondary action is stated by
+   ROLE rather than by class: in a CTA row, the primary action is the button and every link that is not the
+   button is a secondary link. `:not(.button)` is the whole mechanism, so a new secondary route on any of the
+   four zones is treated correctly without being given a name, and a class added to one page cannot drift out
+   of sync with the button.
+   `.button` still owns everything a button is -- height, padding, typography, radius, hover -- and nothing
+   below restates any of it, which is what makes the primary action the same control on every page by
+   construction rather than by comparison.
+   The wrappers keep their own class, because that is what the pages and their tests name, and the vertical
+   spacing stays local: `.about-actions` and `.detail-contact` end a section and take the section's own token,
+   while the Home's row and the Contact page's sit in a grid whose `gap` already spaces them. */
+.actions,
+.home-action,
+.about-actions,
+.detail-contact { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem 1rem; }
+.button {
+  display: inline-flex; align-items: center; gap: .5rem; min-height: 2.9rem;
+  padding: .55rem 1.15rem; background: var(--forest); color: var(--on-forest);
+  border: 1px solid var(--forest); border-radius: var(--radius);
+  font-size: .92rem; font-weight: 660; text-decoration: none;
+  transition: background .18s var(--ease), border-color .18s var(--ease), transform .18s var(--ease);
+}
+.button:hover { background: var(--forest-deep); border-color: var(--forest-deep); color: var(--on-forest); }
+/* The secondary action, by role: every link in a CTA row that is not the button. Same treatment as the
+   `closing-actions` sentence on the Projects index -- accent, semibold, underlined on hover and never at rest
+   -- so a reader meets one secondary grammar. The hover colour stays the global `a:hover` forest: this rule
+   only owns the resting state and the underline. */
+.actions a:not(.button),
+.home-action a:not(.button),
+.about-actions a:not(.button),
+.detail-contact a:not(.button) { color: var(--accent); font-weight: 620; text-decoration: none; }
+.actions a:not(.button):hover,
+.home-action a:not(.button):hover,
+.about-actions a:not(.button):hover,
+.detail-contact a:not(.button):hover { text-decoration: underline; }
+
+/* ---------------------------------------------------------------- hero */
+
+.hero { padding-block: clamp(2.5rem, 5vw, 4.25rem) var(--section); }
+/* ONE COLUMN, STACKED, ON EVERY WIDTH. The hero used to be asymmetric on purpose -- the argument on the left, a
+   real artifact on the right, 7fr against 5fr above 60rem -- and the owner rejected it: two columns make the
+   title shout and the work small. What is left is one stack in the order the reader needs it, and the grid is
+   only the spacing between the three groups (the title with its pillars, the row of work, the calls to action).
+   There is deliberately NO breakpoint here: a single column is the whole layout at every width, so a media
+   query would only be a second rule for the same answer. */
+.hero-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: clamp(1rem, 2vw, 1.4rem); }
+/* The hero's own sentence, and its own job: the H1 states the professional domains, this states what Mathieu is
+   doing now. It is one sentence and it stays one -- the composition gives it a readable measure and no more, so
+   a longer edit reads as a paragraph rather than being absorbed silently. */
+.hero-positioning { max-width: var(--prose); margin: 0; color: var(--ink-soft); font-size: var(--step-0); }
+/* The title was `--step-5` -- 75.8px at 1440 -- which is a size for a page that has nothing else to say. At
+   `--step-4` it is the largest thing on the home and no longer the loudest: the same token every other page's
+   title uses, so being the home is expressed by the work under it, not by shouting. The tracking and leading
+   loosen with the size: `-.035em` and `1.02` are corrections for a very large heading and they crowd a smaller
+   one. The descriptive sentence that used to sit here is deleted with the two-column shape, because the pillars
+   already say what the studio covers. */
+.hero-title { font-size: var(--step-4); letter-spacing: -.028em; line-height: 1.1; margin: 0; }
+.hero-pillars { display: flex; flex-wrap: wrap; gap: .45rem; margin: 0; padding: 0; list-style: none; }
+.hero-pillars li {
+  padding: .34rem .7rem; border: 1px solid var(--line); border-radius: 999px;
+  background: var(--paper); color: var(--ink-soft);
+  font-size: .79rem; font-weight: 620; letter-spacing: .01em;
+}
+
+/* ---------------------------------------------------------------- home: selected work and closing
+
+   THE FINAL HOME IS ONE EDITORIAL PAGE (Home A2 final refactor, 2026-10-02), and this block is the whole of its
+   composition below the hero. It carries three structural boundaries and no more: the header's own bottom
+   border, the hero | work rule, the work | closing rule, and the footer's top border. The experiment carried
+   thirteen horizontal rules and a section of its own for four names; both counts are what this block answers.
+
+   ONE LOCAL RHYTHM. The two section gaps read `--home-section`, which is this composition's own value and not a
+   reduction of the site's `--section` token: the experiment entered each section at 49 px (1440), put 44 px
+   between a heading and its note, 12.8 px between another heading and its line, and left 96 px of nothing before
+   the footer. One gap for equal relationships, tuned for the Home only, is the whole of the fix. */
+.home-work,
+.home-closing { --home-section: clamp(2.5rem, 4.2vw, 3.75rem); padding-block: var(--home-section); }
+.home-work { border-top: 1px solid var(--line-ink); }
+.home-closing { border-top: 1px solid var(--line-ink); }
+/* THE 96 px OF NOTHING IS CLOSED, HOME-SCOPED. `.site-footer` carries a global
+   `margin-top: clamp(3rem, 7vw, 6rem)`; on the final Home the closing block already pads its own bottom, so that
+   margin was measured as 96 px of empty page at 1440 and 96 px at 390 between the closing sentence and the footer.
+   The length is published once, on the only `main` that ends in a closing block -- `:where()` keeps this
+   declaration at zero specificity, so it cannot beat a section rule by accident -- and the footer's approach is
+   then the same local length as the two section gaps above it. Only the Home wears the modifier, so every other
+   page keeps the site-wide margin it has always had. */
+:where(main:has(> .home-closing)) { --home-section: clamp(2.5rem, 4.2vw, 3.75rem); }
+.site-footer--after-block { margin-top: var(--home-section); }
+
+/* The heading and the route to everything else share one baseline row. The heading is the site's normal section
+   scale (`h2`, `--step-3`) rather than the experiment's 11.84 px, which was the least dominant text on the page;
+   the link is the one element that states the reach, and it carries the count so the section does not state it
+   twice. At 320 px the row wraps, and the link stays whole: an ellipsised count would be the one number on the
+   page made unreadable by a narrow screen. */
+.home-work-head {
+  display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between;
+  gap: .4rem 1.5rem; margin-bottom: clamp(1.5rem, 3vw, 2.25rem);
+}
+.home-work-title { margin: 0; }
+.home-work-more { color: var(--accent); font-weight: 620; text-decoration: none; white-space: nowrap; }
+.home-work-more:hover { text-decoration: underline; }
+
+/* THREE COLUMNS ON A DESKTOP, ONE ON A PHONE. At 76rem/four columns the entries would be 178 px wide and every
+   line would wrap; at three they are ~381 px at 1440 and ~297 px at 1024, which is the width the analysis
+   measured as the compact composition (three entries in 201 px against ~270 px for the same three stacked). */
+.home-work-list {
+  display: grid; grid-template-columns: minmax(0, 1fr); gap: clamp(1.5rem, 6vw, 2.5rem);
+  margin: 0; padding: 0; list-style: none;
+}
+@media (min-width: 46rem) { .home-work-list { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+/* THE NAME IS THE LINK AND THE DOMINANT ELEMENT. The whole entry is one anchor, so a reader's target is the
+   entry rather than the name only, and the name keeps the largest type in the block. The facts and the context
+   line are two steps down from it, which is what makes three projects scan as three projects and not as three
+   cards: no border, no background, no shadow, no image. */
+.home-work-item { min-width: 0; }
+.home-work-link {
+  display: grid; gap: .35rem; color: var(--ink); text-decoration: none;
+}
+.home-work-link:hover .home-work-name { color: var(--accent); }
+.home-work-link:focus-visible { outline-offset: .3rem; }
+.home-work-name {
+  font-size: var(--step-1); font-weight: 660; letter-spacing: -.012em; line-height: 1.2;
+  text-decoration: underline; text-decoration-thickness: .06em; text-underline-offset: .2em;
+  transition: color .18s var(--ease);
+}
+.home-work-facts {
+  color: var(--muted); font-size: .78rem; font-weight: 620;
+  letter-spacing: .02em; text-transform: none;
+}
+.home-work-line { color: var(--ink-soft); font-size: var(--step--1); line-height: 1.5; }
+
+/* THE CLOSING BLOCK: ONE SECTION, ONE RULE, THREE THINGS. A compact trust signal, the work-context line and the
+   one action. The trust line names the organizations rather than the people, and every name is the route to the
+   page that owns the references; the engagement line is the service half in one sentence; the button is the only
+   control. Nothing here is a band of its own, so there is no gap to leave empty between the action and the
+   footer -- the 96 px the audit measured is removed by the composition, not by a negative margin. */
+.home-closing > .shell { display: grid; gap: .85rem; justify-items: start; }
+.home-trust { margin: 0; color: var(--muted); font-size: var(--step--1); }
+.home-trust a { color: var(--accent); font-weight: 620; text-decoration: none; }
+.home-trust a:hover { text-decoration: underline; }
+.home-engagement { margin: 0; color: var(--ink-soft); font-size: var(--step-0); }
+/* The Home's closing row takes the shared CTA grammar from the actions block and states only its own spacing:
+   `.home-closing > .shell` is a grid with `gap: .85rem`, so this row needs a nudge and not a section margin. */
+.home-action { margin: .35rem 0 0; }
+
+/* ---------------------------------------------------------------- home: work already shown elsewhere
+
+   THE ONE-SCREEN HERO, ITS MEDLEY AND ITS CAPTION ARE GONE (Home A2 final refactor, 2026-10-02). The rules that
+   pinned the header, the hero and the footer over `100svh`, centred the hero in its row, tightened its padding
+   and capped the medley cell with `calc(100svh - 36rem)` are deleted with the composition that needed them --
+   `.page-home`, `.hero-identity`, `.hero-person`, `.hero-anchor` and `.hero-note` are emitted by no page now, and
+   a rule for markup nothing emits is a rule the next person has to disprove. The three pictures, the caption
+   that named them and the sentence that re-listed the H1's domains are all on the pages that own them: the
+   project page's own plate, `/projects/`, and the About narrative. */
+
+/* THE PROJECT MEDLEY IS UNCHANGED BY THAT DELETION, and the hero's own row variant went with it. The row rules
+   below existed only for the home hero's three equal cells (`medley--row` with no leading cell), and the hero no
+   longer emits a medley at all. The project plate keeps its own composition: the primary capture occupies the
+   leading cell and the rest fill the grid beside it, which is what `MEDLEY_SIDE_FROM` and `.plate--medley` below
+   already decide. */
+.medley--works { border-radius: var(--radius); }
+
+/* ---------------------------------------------------------------- plate */
+
+/* The media frame. It holds a real image, and it exists only when a project declares one.
+   It used to hold a generated artifact plate as a fallback -- same frame, same grid, "so a media-less
+   project is a design, never a hole" -- and that reasoning was wrong twice over: the drawing was 441 px
+   tall on eight of eleven cards and named nothing, and reserving a picture-sized surface for a project
+   with no picture is precisely the hole it claimed to avoid. A project without an image now has no media
+   element, and `.card--text` below is what makes that card deliberate rather than unfinished. */
+.plate {
+  position: relative; display: block; overflow: hidden;
+  margin: 0; background: var(--paper); border: 1px solid var(--line-soft); border-radius: var(--radius);
+  aspect-ratio: 4 / 3;
+}
+.plate--wide { aspect-ratio: 16 / 9; }
+.plate--tall { aspect-ratio: 3 / 4; }
+.plate img { width: 100%; height: 100%; object-fit: cover; }
+
+/* ---------------------------------------------------------------- project cards */
+
+/* The gap is the only spacing on this page that the reader pays eleven times. Measured at 390x844, the
+   minimum of 1.5rem cost 240px of a 3 721px page -- 6.5 % of the page spent separating things that are
+   already separated by a border and a card each. 1rem at the narrow end leaves the separation legible and
+   gives back 80px; above roughly 533px the middle term of the clamp wins and nothing changes, so the
+   desktop grid is untouched. */
+/* ONE COLUMN, AND THE CARD IS AS TALL AS ITS CONTENT. Every project takes the whole row, because the page
+   shows one project per row rather than a grid to be balanced: an illustrated project is a full-width
+   feature, and a project with no media is a compact full-width record. `align-items: start` and the
+   `height: auto` below are what stop a card being stretched to the height of the row it is in -- the
+   shipped grid used to be two columns with `height: 100%` on the card, which kept two neighbours' borders
+   level and also made a card holding one sentence stand as tall as the illustrated card beside it. That
+   is the "this card's image failed to load" reading, arriving from the layout rather than from a
+   placeholder. The rows are packed at the top, so the height a card does not need falls below its own
+   text instead of inside it. */
+.project-list { display: grid; grid-template-columns: minmax(0, 1fr); align-items: start; gap: clamp(1rem, 3vw, 2.5rem); margin: 0; padding: 0; list-style: none; }
+
+.project-card { min-width: 0; }
+.project-list .card { height: auto; }
+/* There is no featured card. `featured_order = 0` belonged to a project the site keeps hidden, so the
+   rule that made one card full width could never fire; the hierarchy on this page is the chronological
+   order, and that is a property of the content rather than of a card. */
+
+.card {
+  display: grid; gap: 1rem; height: 100%; padding: clamp(1rem, 2vw, 1.35rem);
+  /* The card is as tall as its row, and `height: 100%` is what keeps its border level with its neighbour's.
+     The rows are packed at the top so the height a card does not need falls BELOW its own text instead of
+     inside the media link: a stretched link pushed the shorter card's whole text block down, which is what
+     made two cards side by side start their text on different lines (measured 37px at 1440, 33.7px at 1024,
+     36.5px at 768). */
+  align-content: start;
+  background: var(--paper); border: 1px solid var(--line-soft); border-radius: var(--radius);
+  transition: border-color .2s var(--ease), box-shadow .25s var(--ease), transform .25s var(--ease);
+}
+.card:hover, .card:focus-within {
+  border-color: var(--line);
+  box-shadow: 0 18px 40px -28px rgba(20, 26, 23, .45);
+  transform: translateY(-2px);
+}
+/* A text card is a card. It carries the same border, the same radius, the same padding and the same grid
+   cell as a card with a picture: the only difference is that it has no media element, so its text starts
+   where the card starts. The one thing these rules do NOT do is reserve the plate's height -- a card whose
+   text sits under an empty 441 px box is the "missing content" reading this pass is replacing. */
+.card--text { align-content: start; }
+.card--text .card-body { gap: .6rem; }
+.card-body { display: grid; gap: .7rem; align-content: start; }
+.card-title { margin: 0; font-size: var(--step-3); letter-spacing: -.028em; }
+.card-title a { color: var(--ink); text-decoration: none; }
+.card-title a:hover { color: var(--accent); }
+/* ONE TARGET PER CARD, and it is the whole card. The title link is stretched over the card's padding box so
+   a pointer anywhere inside the border opens the project -- which is what the card already looked like it
+   did, and what it did only 56--78 % of the time: the summary, the tag list and the evidence disclosure all
+   sat above the overlay and swallowed the click. With the disclosure gone and the overlay still here, the
+   measured coverage is the whole surface. */
+.card-title a::after { content: ""; position: absolute; inset: 0; }
+.card { position: relative; }
+.card .plate { position: relative; z-index: 0; }
+/* The card's own text is NOT raised above the stretched link any more. It used to be (`z-index: 1`), so the
+   text stayed selectable -- and every raised element was a click that reached the text instead of the link.
+   Nothing inside a card is interactive now except the one anchor, so the overlay is left on top and the
+   whole surface opens the project. */
+.card-summary { margin: 0; color: var(--ink-soft); max-width: 42rem; }
+/* Where and when. The card used to print the schema's own word for the project's kind here -- twice, in
+   fact, once as a plate label and once as this eyebrow. These are the two facts that decide whether to open
+   the card: who the work was for, and when it happened. */
+.card-facts {
+  margin: 0; color: var(--muted); font-size: var(--step--1); font-weight: 620;
+  letter-spacing: .01em;
+}
+.card-tags { display: flex; flex-wrap: wrap; gap: .35rem; margin: 0; padding: 0; list-style: none; }
+.card-tags li {
+  padding: .2rem .55rem; background: var(--stone-soft); border-radius: 999px;
+  color: var(--muted); font-size: .74rem; font-weight: 620;
+}
+
+/* ---------------------------------------------------------------- the project row
+   ONE PROJECT PER ROW, and how a row is laid out is decided by whether the project has real media. That is
+   the whole composition, and it is derived from the content: the renderer puts `project-card--media` or
+   `project-card--text` on the list item from the project's own media list, and nothing here names a project
+   or an index. There is no second composition, no variant class and no switch.
+
+   A PROJECT WITH MEDIA is a feature. The card turns on its side -- the picture takes the wide column, the
+   text the narrow one -- so the feature is wide rather than merely tall, and the text sits beside the image
+   instead of under one that pushed it down. Below 46rem there is no room for two columns and the card stacks,
+   which is also what it does on a phone.
+
+   A PROJECT WITHOUT MEDIA is a compact record: the same border, radius and padding as any other card, but
+   nothing reserved for a picture it does not have and no height inherited from a neighbour. Full width does
+   not mean prose run across 1216px -- `.card-summary` caps its own measure at 42rem, and above 62rem the
+   body arranges as title / facts over a summary column with the chips in a secondary zone to the right, so
+   the row is wide while the reading measure is not. Between 46rem and 62rem there is not enough width for
+   two comfortable columns, so the body stays in normal flow rather than being compressed.
+
+   NOTHING HERE REORDERS ANYTHING. The list is one column, so there are no half-rows to fill and no reason
+   for `grid-auto-flow: dense`; the DOM order is the canonical order and the layout follows it. */
+@media (min-width: 46rem) {
+  .project-list > .project-card--media .card {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); align-items: center;
+  }
+  .project-list > .project-card--media .plate { grid-column: 1; grid-row: 1; }
+  .project-list > .project-card--media .card-body { grid-column: 2; grid-row: 1; }
+}
+/* 62rem, NOT 46rem, and the difference is a viewport in the validation matrix. The compact row's two
+   columns need 42rem of text plus a secondary zone beside it; at 46rem of viewport there is not enough
+   room, and the body was measured at 768x1024 (48rem) with the chips squeezed beside a summary that had
+   lost 30px of its measure. Between 46rem and 62rem the body stays in normal flow: same order, same
+   measure, no compressed column. */
+@media (min-width: 62rem) {
+  /* The chips sit in the space a full-width row would otherwise leave empty beside a two-line summary. The
+     title and the facts line still span the whole card: nothing is squeezed to make the row one line, and
+     the summary keeps its own measure inside its column. */
+  .project-list > .project-card--text .card-body {
+    grid-template-columns: minmax(0, 42rem) minmax(0, 1fr);
+    grid-template-areas: "title title" "facts facts" "summary tags";
+    column-gap: clamp(1.5rem, 4vw, 3rem);
+    align-items: center;
+  }
+  .project-list > .project-card--text .card-title { grid-area: title; }
+  .project-list > .project-card--text .card-facts { grid-area: facts; }
+  .project-list > .project-card--text .card-summary { grid-area: summary; }
+  .project-list > .project-card--text .card-tags { grid-area: tags; justify-content: flex-end; }
+}
+
+/* ---------------------------------------------------------------- capability-area chips */
+
+/* ONE DIMENSION, ONE CHOICE, ALWAYS VISIBLE. The reader sees what can be filtered by without opening
+   anything, and a single choice cannot produce an empty list. The bar is in the document flow and is not
+   sticky: it used to be `position: sticky` and it covered the cards beneath it while the reader scrolled
+   -- the harness measured it intercepting pointer clicks on five of the eleven cards.
+
+   Its three spacings are measured, not chosen by eye. At 1440 the strip occupied 114.58px between the
+   intro and the first card for a 35.19px row of chips, so 79px of that was margin and padding: the reader
+   paid four fifths of the distance to the first project to reach a control they had not asked for. The
+   border stays -- it is what says the strip belongs to the list under it -- and the space around it is
+   halved, which puts the first card at 242px instead of 280px without moving anything on the page. */
+.filters {
+  margin-bottom: clamp(.75rem, 1.5vw, 1rem); padding: 0 0 .5rem;
+  border: 0; border-bottom: 1px solid var(--line-soft); background: none;
+}
+.filter-areas { display: flex; flex-wrap: wrap; gap: .4rem; }
+.filter-areas button { min-height: 2.2rem; padding: .35rem .8rem; }
+.filter-areas button[aria-pressed="true"] {
+  background: var(--forest); border-color: var(--forest); color: var(--on-forest);
+}
+
+button {
+  min-height: 2.2rem; padding: .3rem .72rem;
+  border: 1px solid var(--line); border-radius: 999px;
+  background: var(--paper); color: var(--ink-soft);
+  font: inherit; font-size: .82rem; font-weight: 620; cursor: pointer;
+  transition: background .16s var(--ease), border-color .16s var(--ease), color .16s var(--ease);
+}
+button:hover { border-color: var(--ink); color: var(--ink); }
+button[aria-pressed="true"] { background: var(--forest); border-color: var(--forest); color: var(--on-forest); font-weight: 680; }
+button:focus-visible { outline: .18rem solid var(--accent-bright); outline-offset: .18rem; }
+
+/* ---------------------------------------------------------------- experience */
+
+/* Track record, not a ledger: the name carries the weight, the rest supports it. These four rules went with
+   the Home's track-record section in the Home A2 final refactor (2026-10-02): the Experience page owns the
+   dated record now, and it prints its own career rows rather than reusing this list. */
+
+/* ---------------------------------------------------------------- expertise
+
+   Expertise states the claims; the project names carry the proof. The areas are reading separators and not
+   sections with a life of their own, so one hairline divides them and one hairline divides the capabilities
+   inside one -- no card, no box, no chip, no uppercase label on every row. A capability is a heading, the
+   one sentence the content states, and the work that proves it, linked to the page that owns it. */
+
+.expertise-areas { display: grid; gap: clamp(2rem, 4vw, 3rem); }
+.expertise-area h2 { max-width: 34rem; }
+.capability-list { display: grid; margin: 0; padding: 0; list-style: none; }
+.capability { padding: 1rem 0; border-top: 1px solid var(--line-soft); }
+.capability:first-child { border-top: 0; padding-top: .4rem; }
+.capability-summary { margin: .15rem 0 0; max-width: 42rem; color: var(--muted); }
+/* The project names are the evidence and the only links on the page. They take the accent (6.5:1 on the
+   sand band) and the default size, so a name is as readable as the sentence above it; a smaller or lighter
+   treatment would say the proof is an aside. */
+.capability-projects { margin: .35rem 0 0; color: var(--muted); }
+.capability-projects a { color: var(--accent); font-weight: 620; text-decoration: none; }
+.capability-projects a:hover { text-decoration: underline; }
+
+/* `.evidence-list` went with the record layout on 2026-09-30, and this pass deleted the last of the rules that
+   outlived their markup (Home A2 final refactor, 2026-10-02): `.evidence-list`, `.list-plain`, `.detail-rows`
+   and `.detail-label` were emitted by no page -- the story's proof is `.proof-list` in the project-detail
+   section, and no content list uses the generic plain-list rule that `.list-plain` was a typo of. */
+
+/* ---------------------------------------------------------------- project detail */
+
+/* THE PROJECT PAGE IS ONE COLUMN. `.detail-section` and `.detail-content` are shared with the long-form
+   pages (articles, privacy), which still want the heading-beside-content grid this section used to set for
+   the project record as well; the project page's own rules below scope that grid off and stack the sections
+   instead. `.detail-facts`, `.detail-header` and `.detail-index` are not defined any more and not emitted
+   any more: the record layout they belonged to was deleted with the pilot gate. */
+
+/* A BLOCK, NOT A GRID, SINCE THE STRIP. It was `display: grid; gap: 0`, which spaced nothing: one implicit column,
+   one child per row, no gap. A sticky child of a grid container is constrained to its own grid area -- the height
+   of its own row -- so the strip would have had no room to move and would not have stuck at all. As a block
+   container the article is the strip's containing block, which is the whole page, which is what sticky needs.
+   Nothing else changes: with no gap and no column template the two layouts were already the same box model. */
+.project-detail { display: block; }
+.detail-media { margin: 0; }
+
+.detail-section { display: grid; gap: 1rem; }
+@media (min-width: 60rem) {
+  .detail-section { grid-template-columns: minmax(0, 3fr) minmax(0, 9fr); gap: clamp(1.5rem, 4vw, 3.5rem); }
+  .detail-section > .detail-content { grid-column: 2; }
+}
+.detail-section > h2 { font-size: var(--step-1); }
+
+/* Closing band: the projects index no longer has one. Its rules went with the markup on 2026-09-29. */
+
+/* ---------------------------------------------------------------- about / contact */
+
+/* THE ABOUT PAGE IS ONE COLUMN OF READING, THEN A RAIL. The page used to be a two-column grid -- a portrait
+   beside a "How I work" block and a key-areas list -- over a ten-row timeline whose rows carried a role, an
+   organization and a summary each. The approved shape is a short narrative and six dated rows, so the grid and
+   the portrait are gone and the career list keeps the one arrangement that survived the review: a narrow period
+   rail beside the row's own line, stacked on a phone.
+
+   `36rem` is the reading measure for the narrative, and it is narrower than the site's `--prose` (44rem) on
+   purpose: the em dash of the measurement is a line a reader can hold, and the audit measured 109-148
+   characters per line on this page before it. The period rail is sized in `ch`-independent rems so the six
+   labels ("2026-", "2014-23", "Earlier") share one edge. */
+.about-opening { display: grid; gap: 1.1rem; }
+.about-opening h1 { font-size: var(--step-4); }
+.about-opening .lede, .about-opening p { max-width: 36rem; }
+.about-opening p { color: var(--ink-soft); }
+.about-opening .lede { color: var(--ink); }
+.career { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
+.career > li {
+  display: grid; grid-template-columns: 1fr; gap: .15rem .5rem;
+  padding: .85rem 0; border-top: 1px solid var(--line-soft);
+}
+.career > li:first-child { border-top: 0; padding-top: 0; }
+@media (min-width: 44rem) { .career > li { grid-template-columns: 6.5rem minmax(0, 1fr); gap: 0 1.5rem; } }
+/* `--muted`, not the lighter grey the timeline used: that label measured 4.2:1 on paper, under the 4.5:1 floor
+   for its size. The period is the one thing a scanning reader reads first, so it is not the thing to fade. */
+.career-period { font-size: var(--step--1); font-weight: 660; color: var(--muted); font-variant-numeric: tabular-nums; }
+.career-body { display: grid; gap: .15rem; }
+.career-body h3 { font-size: var(--step-0); font-weight: 680; }
+.career-body p { margin: 0; color: var(--muted); max-width: 36rem; }
+/* The About page's closing row takes the shared CTA grammar from the actions block; what is local is the
+   section's own top margin. `Contact` is the zone's one primary action and `Projects` is a secondary link
+   (UI coherence pass, 2026-10-04): the page used to close with two filled buttons, which is two primary
+   actions competing in one zone -- and the second one pointed at a route the navigation already offers. */
+.about-actions { margin: clamp(1.75rem, 3vw, 2.5rem) 0 0; }
+/* The About page's two non-role blocks (global content rationalization, 2026-10-01): education and languages, and
+   the professional references. Each is a list of one fact per line, so each carries no rail, no card and no
+   border -- the career rows above already own that rhythm -- and `.plain-list` is not reused because it has no
+   rule of its own and would publish default bullets under a section heading. */
+.about-facts, .reference-list { display: grid; gap: .45rem; margin: 0; padding: 0; list-style: none; }
+.about-facts li, .reference-list li { color: var(--ink-soft); }
+/* NAME LEFT, ORGANIZATION RIGHT (Home A2 final refactor, 2026-10-02). The row is one flex line, not a grid and
+   not two columns of references: the whole block is still a single list of four rows at every width, and the
+   organization is simply pushed to the right margin so the two facts can be read as a pair rather than as one
+   em-dash string. `flex-wrap` is what keeps a narrow viewport from overflowing -- below the two facts' combined
+   width the organization drops under the name and stays readable instead of being clipped or ellipsised -- and
+   `gap` is what stops the wrapped pair from touching. `rem` rather than `em` for the wrap gap, because the
+   block's own type size is the label size and the gap between two labels is a layout value. */
+.reference-list li {
+  display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: .1rem 1.5rem;
+  color: var(--ink);
+}
+.reference-name { font-weight: 660; }
+.reference-org { color: var(--muted); font-weight: 620; }
+/* The contact page is one sentence and one action. The note is the page's one stable work-context line: a fact a
+   reader may want to know before writing, not a call to action, so it is muted and sits under the control. */
+.contact-panel { display: grid; gap: 1rem; }
+.contact-panel h1 { font-size: var(--step-4); }
+.contact-note { margin: 0; color: var(--muted); }
+
+/* ---------------------------------------------------------------- utility pages */
+
+.policy-list { display: grid; gap: .5rem; margin: 0; padding: 0; list-style: none; }
+.policy-list a { display: block; padding: 1rem 1.1rem; background: var(--paper); border: 1px solid var(--line-soft); border-radius: var(--radius); font-weight: 660; text-decoration: none; }
+.policy-list a:hover { border-color: var(--forest); }
+.breadcrumb { display: flex; flex-wrap: wrap; gap: .5rem; margin: 0 0 1.5rem; color: var(--muted); font-size: var(--step--1); }
+.page-intro { padding-block: clamp(2rem, 4vw, 3.25rem) 0; }
+.page-intro .lede { margin-bottom: 1.25rem; }
+/* Opening a page is a composition too: the title holds the left, the argument sits beside it. */
+@media (min-width: 60rem) {
+  .page-intro .shell { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); column-gap: clamp(2rem, 5vw, 4.5rem); }
+  .page-intro .shell > .eyebrow { grid-column: 1; }
+  .page-intro .shell > h1 { grid-column: 1; }
+  .page-intro .shell > .lede { grid-column: 2; grid-row: 1 / span 3; align-self: end; max-width: 38rem; }
+  .page-intro .shell > :not(.eyebrow):not(h1):not(.lede) { grid-column: 1 / -1; }
+}
+
+[hidden] { display: none !important; }
+
+/* ---------------------------------------------------------------- responsive */
+
+@media (max-width: 46rem) {
+  :root { --section: clamp(2.75rem, 8vw, 4rem); --header-sticky-height: 0px; }
+  .site-header > .shell { flex-direction: column; align-items: flex-start; gap: .1rem; padding-block: .7rem .5rem; }
+  .site-header { position: static; }
+  .primary-nav { width: 100%; }
+  /* The nav scrolls rather than wrapping into four lines on a phone. */
+  .primary-nav { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .primary-nav::-webkit-scrollbar { display: none; }
+  .primary-nav a { white-space: nowrap; }
+  .hero { padding-block: 1.75rem var(--section); }
+  /* The Home hero's own title, one step down on a phone (2026-10-01). `--step-4` renders at 33.4px at 390px wide,
+     where the title took three lines and was the tallest block in the first viewport; `--step-3` (28.3px) with a
+     slightly tighter leading puts it back to two lines without moving anything else. This is scoped to the Home:
+     `--step-4` stays the size of every other page's title and of the desktop hero, so the wide layout is
+     unchanged, and nothing here touches the pillars, the positioning sentence or the work list. */
+  .hero-title { font-size: var(--step-3); line-height: 1.14; letter-spacing: -.02em; }
+  .card { padding: .9rem; }
+  .plate { aspect-ratio: 16 / 10; }
+  /* The strip's phone arrangement is the same four controls on one row: `All projects` and `N of 11` stay where
+     they are -- the count is orientation, not decoration, and the product decision keeps it -- and the two name
+     cells are the only ones that give up width. One row, no wrapping, no horizontal scrolling, and nothing behind
+     a hover. The narrower gap is the whole of the phone-specific arrangement. */
+  .project-nav__row { gap: 0 .5rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; }
+  .card:hover { transform: none; }
+}
+
+/* ---------------------------------------------------------------- correction pass
+   Appended after the system above, so these rules win by order and the earlier ones stay as the record of
+   the decisions they made. Two corrections remain: the hero's own drawing and a compact page intro. The
+   third -- collapsible filter groups -- was removed on 2026-09-29 with the controls it styled; the fourth
+   -- evidence as cards on Expertise -- was removed on 2026-09-30 with the page that painted them. */
+
+/* The hero drawing is the studio's own, not a project's: three contour fields laid over one another, no
+   initial in a box and no project kind label. It is captioned as a drawing because that is what it is. */
+.medley { position: relative; aspect-ratio: 16 / 11; border: 1px solid var(--line); background: var(--paper); overflow: hidden; color: var(--forest); }
+.medley-rule { position: absolute; inset: 0 auto 0 0; width: .22rem; background: var(--accent); }
+.medley-mark { position: absolute; right: 1rem; bottom: 1rem; display: block; width: 2.1rem; height: 2.1rem; opacity: .5; }
+.medley-cairn { width: 100%; height: 100%; }
+
+/* The tab strip, the shared panel, the selected-value badge, the result counter, `Clear filters` and the
+   no-result panel are all gone with the three dimensions they served. They are not commented out and they
+   are not kept "for later": a rule for a control that no page emits is a rule the next person has to
+   disprove. What replaced them is `.filter-areas` above. */
+
+/* The Expertise title was competing with the Home hero. It now announces the page and hands over to the
+   capabilities within the first viewport. */
+.page-intro--compact h1 { max-width: 20ch; font-size: var(--step-4); }
+@media (min-width: 60rem) { .page-intro--compact { padding-block: clamp(1.25rem, 3vw, 2.25rem) 0; } }
+
+/* Projects carries a control strip and a double-column card list below its intro, so the intro gives its
+   space back to them: the title is a step smaller than a page with nothing under it, and the lead and the
+   control strip sit close. */
+@media (min-width: 60rem) {
+  .projects-intro { padding-block: clamp(1.25rem, 3vw, 2rem) 0; }
+  .projects-intro h1 { margin-bottom: .5rem; font-size: var(--step-4); }
+  .projects-intro .lede { margin-bottom: 0; }
+}
+/* The gap between the title and what the page is for. It was 36px, which measured as the largest single
+   block of empty space above the first project on a page whose whole complaint was that the reader had to
+   get past the page to reach the work; 16px still separates the two blocks. */
+.projects-intro + .shell { margin-top: clamp(.75rem, 1.5vw, 1rem); }
+
+/* About has no opening hero: the page starts on its composition, so the first section is also the first
+   thing under the header and gives up the padding it does not need. The illustration that used to anchor it
+   is gone, so its phone cap went with it (Home A2 final refactor, 2026-10-02). */
+.band--first { padding-top: clamp(1.75rem, 4vw, 3rem); }
+
+/* ---------------------------------------------------------------- filter responsive pass
+   Appended after the finishing pass above, so these rules win by order and the earlier ones stay as the
+   record of the decisions they made. The finishing pass put the action in the same flex line as the four
+   categories and forbade that line to wrap; the owner rejected it, and he was right. An action that shares
+   the line is a candidate for the space, so it becomes the reason a category falls to the next row -- the
+   reader sees Organizations move because he clicked a skill, and nothing about that is a consequence of his
+   click. The three zones are now independent: the categories wrap only among themselves, the options panel
+   follows them, and the action and the count have their own right-aligned line at the bottom.
+
+   The whole responsive behaviour is `flex-wrap` doing its ordinary work, so there is no breakpoint here at
+   all. The earlier pass's media query is gone with it: a breakpoint added to force a layout that wrapping
+   already produces is a second rule to keep in agreement with the first. */
+
+/* The tab strip is the categories and nothing else, so its wrapping is decided by the categories alone.
+   `flex-wrap: wrap` replaces the old `nowrap` + `overflow-x: auto`: compressed categories were never the
+   problem, and a strip that scrolls sideways hides a category the reader is looking for. The four tabs stay
+   `flex: 0 0 auto; width: auto` -- no `width: 100%`, which is the other way this row breaks by accident. */
+
+
+
+
+/* ---------------------------------------------------------------- the medley
+   Five images where a project used to have one. The frame, the border, the radius and the label band are the
+   ones the plate already had: the composition is a plate with a grid inside it, not a new component beside
+   it, so a page that mixes one-image cards and a medley stays one page.
+
+   WHY THE COLUMNS ARE 62/19/19 AND NOT THE BRIEF'S 1.6fr. `1.6fr 1fr 1fr` puts the large image at
+   1.6 / 3.6 = 44 percent, which is not the 60-65 percent the brief also asks for and is not what a
+   Bing-style medley looks like. The two instructions disagree, so the one that describes the result was
+   followed and the one that was offered as a concept was not. 62fr 19fr 19fr is the percentage written
+   the way the grid reads it.
+
+   WHY AN ASPECT RATIO ON THE CONTAINER. The primary spans two rows and must end up the same height as the
+   two tiles beside it. Letting each cell declare its own ratio cannot promise that: 16/9 of 62 percent is
+   0.349 of the width while two square tiles of 19 percent are 0.38, and the grid would either overflow or
+   stretch one of them. One ratio on the container and `1fr 1fr` rows makes the cells agree by construction:
+   at 2.8/1 the primary lands at 1.74 (its native 16/9) and each tile at about 1.06, so nothing is squashed.
+   The ratio is proportional, so it holds at every width without a second breakpoint.
+
+   WHY NO BORDER BETWEEN THE CELLS. A border is a frame, and five frames read as five pictures. The gap is
+   2px of the plate's own background showing through, which is the smallest thing that still separates two
+   photographs taken in the same place, and `gap` keeps the outer edge flush with the plate's radius. */
+/* WHY minmax(0, ...) AND NOT A BARE fr. `1fr` is `minmax(auto, 1fr)`, and that `auto` minimum is the content's
+   minimum size: a row is not allowed to become shorter than what its tallest item needs. With five images of
+   one aspect ratio that changes nothing, which is why the first project to carry a medley did not reveal it.
+   DL-Instant's four tiles have four different aspect ratios, and the grid resolved to rows of 229.5 and 200.8
+   instead of two equal rows -- the composition stayed a correct-looking rectangle while the four tiles were no
+   longer the same size, which is the one thing the 2x2 has to be. `minmax(0, ...)` removes the content floor
+   so the fraction is what decides, and `object-fit: cover` then does the cropping it exists for. The columns
+   take the same treatment: a wide image can push a column open the same way. */
+/* THE BOX BELONGS TO THE CARD, AND ONLY TO THE CARD. Two contexts use this composition and they want opposite
+   things from it.
+   IN A CARD the box is the card's, and that is the change. One row of the projects grid used to hold three
+   different media heights -- 542.8x407.1 for a generated plate, 542.8x193.9 for a five-image medley and
+   542.8x420.0 for a four-image one -- so the metadata and the title under each card began on a different line,
+   and a side-by-side composition read as a thumbnail beside a picture twice its height. The requirement is that
+   the number of images never decides the height: 0, 1, 2 or 5 images fill the same rectangle, and the
+   composition divides it instead of sizing it.
+   ON A PROJECT PAGE the composition is the only media on the screen and nothing sits beside it, so there is no
+   alignment to win and it keeps the proportions it was designed and accepted with. That is a deliberate
+   exception, and it is the owner's own scope: this pass is about cards, and the medley component itself was to
+   stay as it is. The price is that a project page's composition still has its own height -- recorded here rather
+   than hidden, because "the box never depends on the image count" is not yet true of every page.
+   So the card rules come after and are one class more specific, and every one of them RESETS a height into a
+   SHARE of a fixed box. */
+.plate--medley {
+  display: grid;
+  grid-template-columns: minmax(0, 62fr) minmax(0, 19fr) minmax(0, 19fr);
+  grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 2px;
+  aspect-ratio: 2.8 / 1;
+  background: var(--stone-soft);
+}
+.plate--medley .medley-primary { grid-column: 1; grid-row: 1 / span 2; }
+/* The four tiles need no columns of their own: with the primary holding column 1 across both rows, the
+   default row flow fills (1,2) (1,3) (2,2) (2,3) in exactly the order the content declares them. */
+.plate--medley .media-cell { display: block; width: 100%; height: 100%; object-fit: cover; }
+
+/* The focal point only nudges which part of a 16:9 capture survives a near-square cell. Centre is the
+   default and stays the default for anything the content does not name. */
+.media-cell.focal--upper { object-position: center 30%; }
+.media-cell.focal--centre { object-position: center 50%; }
+.media-cell.focal--lower { object-position: center 72%; }
+
+/* THE SECOND SHAPE: ONE IMAGE ON TOP, ONE ROW UNDER IT. On a project page the container keeps no ratio of its
+   own and each cell declares its own, because the two rows are independent there. That also means the tile
+   count has to reach the template as a CLASS -- the site forbids inline styles, so a custom property cannot be
+   set from the markup -- and the fallback template is the three-column one that four images need.
+   WHICH SHAPE IS NOT A CSS DECISION and the two disagree in spirit: above four images the large one takes the
+   left column and the rest fill a grid beside it, at four and below the large one takes the full width and the
+   rest sit in one row. Five images were composed beside the large one first and were accepted that way; four
+   cannot fill a 2x2 beside it without leaving a hole, and the owner chose the stacked shape for four. It is a
+   compromise and it is provisional -- a count-driven shape is two compositions with no rule that explains
+   both, and unifying them is the owner's decision, recorded in `tools/renderer.py` beside MEDLEY_SIDE_FROM. */
+.plate--medley.medley--stacked {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: auto auto;
+  aspect-ratio: auto;
+}
+.plate--medley.medley--stacked.medley--cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.plate--medley.medley--stacked.medley--cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+/* The row under the panel holds ONE cell when the composition has a panel and nothing else -- the hero with a
+   single declared work is that case, and a two-image project is the other. The default template is the
+   three-column one four tiles need, so without this the cell sits in a third of the row and two thirds of it
+   are empty. This is the `medley--cols-1` defect recorded during the card pass and offered, not applied; the
+   hero needs it, so it is applied here and the record is updated rather than left saying it is open. */
+.plate--medley.medley--stacked.medley--cols-1 { grid-template-columns: minmax(0, 1fr); }
+.plate--medley.medley--stacked .medley-primary {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  height: auto;
+  aspect-ratio: 16 / 9;
+}
+.plate--medley.medley--stacked .medley-tile { height: auto; aspect-ratio: 16 / 10; }
+
+/* THE CARD OWNS THE BOX. A card's media is 16/10, and that is this pass's decision: the card was 4/3, which
+   at the card's own width is 441 px of frame on a 588 px card. Widening the box to 16/10 takes 110 px off
+   every media card without cropping a four-image composition out of recognition, and it brings the media
+   cards closer to the height of the text cards beside them. `plate--wide` on the project page is untouched:
+   this is the card's variant and nothing else.
+   The rows are 2.2 to 1 so the panel on top dominates without starving the tiles. One fraction cannot give a
+   16/10 card the same cell aspect a standalone plate has, and it should not try: the box is the fixed thing
+   and the cells are what moves. */
+.card .plate { aspect-ratio: 16 / 10; }
+.card .plate--medley.medley--stacked { grid-template-rows: minmax(0, 2.2fr) minmax(0, 1fr); }
+/* Every cell fills the grid area it was given. `.plate--medley .media-cell` already says `height: 100%`, and
+   these two take back the heights the stacked shape declares for the project page. `aspect-ratio: auto` is the
+   important half: a cell that declares a ratio of its own would push its row open again, which is exactly how
+   the box stopped being the card's in the first place. */
+.card .plate--medley.medley--stacked .medley-primary,
+.card .plate--medley.medley--stacked .medley-tile { height: 100%; aspect-ratio: auto; }
+
+/* Below the width where the project list stops being one column per card, the tiles would be about 70px wide.
+   Three columns of thumbnails are not a gallery at that size, so the composition keeps its SHAPE and changes its
+   AXIS: the primary on top, the four tiles in a 2x2 under it.
+   THE CARD RATIO IS SQUARE AT THIS WIDTH, and that is one rule for every card on the page rather than a rule
+   about medleys: five images and a full-width panel cannot share a 4/3 box at 350px without one of them becoming
+   a letterbox strip, where at 1:1 the panel resolves to 2.28 and the tiles to 1.81. The price is that a card
+   holding one image is 350px tall on a phone where it used to be 219, and it pays the same price the composition
+   does -- that is the point of a card owning its box. */
+@media (max-width: 46rem) {
+  /* Scoped away from the variants on purpose. The rule at the top of this sheet already overrides
+     `.plate--wide` and `.plate--tall` at this width, which is pre-existing and left alone here -- widening
+     this selector would change the home page and the project pages too, and this pass is about the cards. */
+  .plate:not(.plate--wide):not(.plate--tall) { aspect-ratio: 1 / 1; }
+  /* A card's media box stays 16/10 at every width. The square rule above is written for a plate standing on
+     its own and it is more specific than the card's own ratio, so without this line a card's picture becomes
+     a square on a phone -- the tallest possible box for the narrowest screen, on the page whose mobile
+     height is the thing being repaired. The selector is deliberately more specific than the rule it corrects
+     and no more. */
+  .card .plate:not(.plate--wide):not(.plate--tall),
+  .card .plate--wide { aspect-ratio: 16 / 10; }
+
+  /* The project page: the composition is released again and each cell declares its own ratio. */
+  .plate--medley {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto auto;
+    aspect-ratio: auto;
+  }
+  .plate--medley .medley-primary { grid-column: 1 / -1; grid-row: 1; aspect-ratio: 16 / 9; }
+  .plate--medley .medley-tile { aspect-ratio: 16 / 10; }
+  /* The stacked shape needs its own line: its column templates are one class more specific than the rule above,
+     so a bare `.plate--medley` would never reach them and four tiles would keep four columns on a phone. */
+  .plate--medley.medley--stacked,
+  .plate--medley.medley--stacked.medley--cols-2,
+  .plate--medley.medley--stacked.medley--cols-4 { grid-template-columns: 1fr 1fr; }
+
+  /* A card keeps its box: only the rows that DIVIDE it change, and no cell gets a ratio back. */
+  .card .plate--medley {
+    grid-template-rows: minmax(0, 1.6fr) minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .card .plate--medley.medley--stacked,
+  .card .plate--medley.medley--stacked.medley--cols-2,
+  .card .plate--medley.medley--stacked.medley--cols-4 {
+    grid-template-rows: minmax(0, 2.2fr) minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .card .plate--medley .medley-primary,
+  .card .plate--medley .medley-tile { aspect-ratio: auto; }
+
+  /* THE HERO'S ROW TREATMENT WENT WITH THE HERO (Home A2 final refactor, 2026-10-02). Two rules used to live
+     here -- the studio mark's phone size and the row's cell ratio argument -- and both were scoped to
+     `medley--row`, the variant only the home hero emitted. The final Home shows no project image, the project
+     plate never carried that variant, so the variant is gone from the stylesheet with the composition. The
+     project plate's own phone arrangement above is untouched and is the only one this page needs. */
+
+  /* Three tiles in two columns leaves a hole, and a cell of bare background inside a gallery reads as an image
+     that failed to load. The last tile takes the full width instead. The selector counts back from the band,
+     which is always the last child, so it names the last tile whatever the count -- and it only fires on the
+     counts that would otherwise leave the hole. The tiles are then not all the same size on a phone, which is
+     measured and reported rather than hidden. */
+  .plate--medley.medley--stacked .medley-tile:nth-last-child(2):nth-child(even) { grid-column: 1 / -1; }
+}
+
+/* A CAPTURE THE CROP DESTROYS IS SHOWN WHOLE RATHER THAN CROPPED.
+   `fit` is a property of the media and not of a project, because the need is a property of the picture: a
+   photograph is made to be filled by the frame, and a capture of a page, a chart or a diagram is not -- cropping
+   it to a cell ratio removes the information it exists to carry. DL-Instant is where this was noticed and no
+   rule here names it; the next technical capture gets the same treatment by declaring one value.
+   THE BOX IS NOT TOUCHED. Same plate, same cell, same 4/3 card ratio, same band in the same place, so a card
+   showing a whole capture stands exactly as tall as its neighbours. Only what happens INSIDE a cell changes.
+   THE SURROUNDING SURFACE IS THE CARD'S. The cell already painted nothing; a plate carrying a `contain` media
+   stops painting the composition frame as well, so what shows around the reduced capture is the card's own
+   `--paper` rather than a rectangle of `--stone-soft`. That is what "the background around it should be
+   transparent" means on the thing the reader looks at.
+   IT DOES NOT MAKE A WHITE CAPTURE TRANSPARENT, and no stylesheet could: if the file is a white sheet, what
+   `contain` shows is the same white sheet, whole, at 92% and centred, with the card visible around it instead of
+   a full-height white column. The inset exists so the capture does not touch the frame.
+   `object-position: center` IS DELIBERATE AND IT OVERRIDES THE FOCAL POINT. A focal point is a decision about a
+   CROP -- where to take the window from a picture that is larger than its cell. A picture shown whole has no
+   window to move, and the only thing a focal point could still do here is push the picture off centre inside its
+   own letterbox, which is the opposite of what showing it whole is for. The values stay on the media because
+   they are the measurement of the picture; they simply have nothing to act on until it is cropped again. */
+.plate .media-cell--contain,
+.plate--medley .media-cell--contain {
+  box-sizing: border-box; object-fit: contain; object-position: center; padding: 4%;
+}
+.plate.plate--contain { background: transparent; }
+
+/* ================================================================ project story (Approach A)
+
+   THE PROJECT PAGE READS LIKE A PROJECT, NOT LIKE A RECORD. The audit measured what the old composition
+   cost: a metadata card of 197-216px was the largest block in the first screen on ten of eleven pages
+   (23-24% of it, larger than the title on eight), the metadata and evidence micro-labels were the smallest
+   text on the page at 10.9-11.8px, and on the three pages with images the contribution began at 1.21-1.94
+   screens because a 434-939px gallery sat in front of it. Nothing about that was wrong data: the page was
+   printing its schema in the order the schema has.
+
+   THE ORDER IS NOW THE READER'S. Title, then `Organization - period` on one muted line, then the summary;
+   then "What I did"; then the real images; then the capability proof; then the technologies on one line;
+   then the way back. Every rule below is scoped to `.project-detail`, which is the only detail composition
+   there is: the pilot gate and the record layout were deleted together on 2026-09-30, so nothing here is a
+   variant, nothing is reached by name, and the project page is the same page for all eleven projects.
+
+   NO CARD, NO NUMBERS, NO LABEL COLUMN. `.detail-facts` is not emitted, `.detail-index` is not emitted and
+   the two-column `3fr / 9fr` `.detail-section` grid is unset on this page: the section heading sits above
+   its content and the reading column is one measure, which is why this block sets `display: block` rather
+   than a second grid template. The old layout's heading column existed to align four schema rows; with two
+   prose sections it only pushed the text right. The shared grid stays for the long-form pages that want it. */
+
+.project-detail .page-intro { padding-block: clamp(1.5rem, 3vw, 2.25rem) 0; }
+/* One column at every width: the hero used to put the title on the left and the argument beside it, and the
+   reader met the summary and the card in the same glance. The story is a stack, so the grid is only the
+   spacing between the three lines. */
+.project-detail .page-intro > .shell {
+  display: grid; grid-template-columns: minmax(0, 1fr); row-gap: clamp(.5rem, 1.2vw, .85rem);
+}
+.project-detail .page-intro > .shell > * { grid-column: 1; grid-row: auto; }
+/* `--step-4` is the size the Home hero and the Expertise title already take, for the reason recorded there:
+   `--step-5` is a size for a page that has nothing else to say, and on a detail page it ate up to 34% of
+   the first screen. The measure is capped so a long project name wraps instead of owning the viewport. */
+.project-detail h1 { max-width: 30ch; font-size: var(--step-4); letter-spacing: -.028em; line-height: 1.1; }
+.project-detail .detail-context {
+  margin: 0; color: var(--muted); font-size: var(--step--1); font-weight: 620;
+  font-variant-numeric: tabular-nums;
+}
+.project-detail .detail-summary { margin: 0; }
+.project-detail .band > .shell { display: grid; gap: clamp(1.75rem, 4vw, 2.75rem); }
+.project-detail .detail-section { display: block; }
+/* ONE MEASURE FOR THE WHOLE STORY. The summary takes `38rem` from the shared intro rule, and the work
+   paragraph and the proof took `--prose` (44rem) until the first measurement of this composition reported
+   lines of 86-88 characters against the 48-82 the audit had measured before it. 38rem puts every block of
+   the page on the same column at 76-79 characters a line, and a reader who is reading one column should not
+   have to discover that its width changes twice on the way down. */
+.project-detail .detail-section > .detail-content,
+.project-detail .proof-list,
+.project-detail .proof-detail { max-width: 38rem; }
+/* The heading comes up one step from the record layout's `--step-1`. Measured against a `--step-4` title it
+   is the middle level the page was missing: the audit found a 3.5x jump from title to section heading while
+   three near-identical micro-labels competed at the bottom. */
+.project-detail .detail-section > h2 { margin-bottom: .85rem; font-size: var(--step-2); }
+.project-detail .proof-list {
+  display: grid; gap: 1.1rem; max-width: 38rem; margin: 0; padding: 0; list-style: none;
+}
+.project-detail .proof-item { display: grid; gap: .2rem; }
+/* The capability label is a label a reader can read: `--step-0`, sentence case, ink. It was 11.8px uppercase
+   in `--accent` -- the smallest text on the page and the only coloured text on it, so the eye landed on the
+   taxonomy word before the sentence that justified it. The label is not decoration and not a heading the
+   reader should skip; it is the name of the capability the sentence proves. */
+.project-detail .proof-label {
+  font-size: var(--step-0); font-weight: 680; letter-spacing: 0; text-transform: none; color: var(--ink);
+}
+.project-detail .proof-detail { max-width: 38rem; margin: 0; color: var(--ink-soft); }
+/* Technologies are metadata, so they read as the page's footnote: one muted line, a hairline above it that
+   the site's other list separators already use, and no card, no heading and no gap that implies a section. */
+.project-detail .detail-tech {
+  margin: 0; padding-top: 1.1rem; border-top: 1px solid var(--line-soft);
+  color: var(--muted); font-size: var(--step--1);
+}
+
+/* ---------------------------------------------------------------- project navigation strip
+
+   EVERY PUBLISHED PROJECT'S NAVIGATION. The compact project-level strip: previous project, the way back to
+   Projects, the project's place in the canonical chronology, and the next project -- always reachable while the
+   reader is inside a long page instead of only at its end. One component, rendered for all eleven public
+   projects from the index's own order, with no per-project markup and no per-project CSS. It replaced the old
+   bottom `Back to all projects` control, which the strip duplicates in the same view: it is sticky, so it is
+   still on screen wherever that control used to be.
+
+   IT IS NAVIGATION, NOT CONTENT, and it is built to stay subordinate to the page: one row, `--step--1` type, no
+   card, no pill, no shadow, no blur, no gradient, no icon and no thumbnail. The surface is the story's own
+   `--paper` and one hairline separates it from the content scrolling under it. The strip is in the flow between
+   the hero and "What I did", so the first screen still reads title, context, summary -- and only then a control
+   the reader may ignore.
+
+   STICKY IS CSS ONLY. `top: var(--header-sticky-height)` puts it exactly under the global header, and the token
+   is zero where the header is not sticky (below 46rem), so the same rule gives the desktop and the phone
+   behaviour without a second rule, a scroll listener or a measured offset in script. */
+.project-nav {
+  position: sticky;
+  top: var(--header-sticky-height);
+  z-index: 9;
+  background: var(--paper);
+  border-bottom: 1px solid var(--line-soft);
+  color: var(--muted);
+  font-size: var(--step--1);
+}
+/* Four regions, always four even at the ends of the chronology: `All projects` and `N of 11` keep their natural
+   width in the middle, and an empty name cell at either end holds the centre group still, so neither orientation
+   control slides sideways on the newest or the oldest project. */
+.project-nav__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto minmax(0, 1fr);
+  align-items: stretch;
+  gap: 0 clamp(.75rem, 2vw, 1.5rem);
+  min-height: var(--project-nav-height);
+}
+.project-nav__cell { display: flex; align-items: center; min-width: 0; }
+/* The name cells give up width first: they are the only flexible columns, and their label truncates rather than
+   wrapping, so the strip is one line at every supported width. */
+.project-nav__cell--previous { justify-content: flex-start; }
+.project-nav__cell--next { justify-content: flex-end; }
+.project-nav__cell--home { justify-content: center; }
+.project-nav__cell--place { justify-content: center; }
+/* The anchors fill the row, so the target is the strip's own height rather than the text's line box: measured at
+   `--step--1`, a text-height anchor is 21-22.8 px tall, which is under the 24x24 CSS px minimum WCAG 2.2 sets for
+   a target. They stretch, and their own content is centred inside them. The label truncates inside its own span
+   instead of on the anchor: an anchor that clips its own overflow clips its focus ring with it. */
+.project-nav__step,
+.project-nav__return { display: flex; align-items: center; align-self: stretch; }
+.project-nav__step {
+  gap: .4rem;
+  min-width: 0; max-width: 100%;
+  color: var(--ink-soft); text-decoration: none;
+}
+/* The ellipsis is visual only: the full title stays the anchor's text, its accessible name and its `title`. */
+.project-nav__label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* `--muted`, not `--muted-light`. The arrow and the place are text, and `--muted-light` measures 4.2:1 on this
+   surface -- the pair the page audit already reports as its commonest contrast shortfall. `--muted` is 6.17:1, so
+   the strip does not add a new instance of a defect the site is already carrying. */
+.project-nav__arrow { flex: none; color: var(--muted); }
+.project-nav__return { color: var(--accent); text-decoration: none; white-space: nowrap; }
+/* `8ch` is one character wider than the longest value this layout has to print (`12 of 12` on 2026-10-03, and
+   `11 of 11` before that), so the place never changes its own width and the centre group does not move between
+   the first project and the last. The digits are tabular, so the measure is stable across the values. */
+.project-nav__position {
+  min-width: 8ch; text-align: center;
+  color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums;
+}
+.project-nav a:hover { color: var(--forest); }
+/* The site's focus ring, drawn inside the strip's own edge: the header paints over this element's top edge by
+   z-index, and a ring that leaves the strip would be half-covered exactly where the reader is looking. */
+.project-nav a:focus-visible { outline-offset: -.18rem; }
+/* Nothing focused, and nothing scrolled to, may land underneath the sticky chrome (WCAG 2.2 Focus Not
+   Obscured). `scroll-margin-top` is the whole mechanism -- no scroll listener, no script, no manual scroll
+   correction -- and it is set on everything in the story's content areas rather than on a list of known targets,
+   because the next section, figure or id this page grows is a target too. It is scoped away from the strip
+   itself: the strip is the chrome, and it is never the thing being scrolled to. The offset is the two chrome
+   heights plus a line of air, computed from the tokens, and it reads zero for the header where the header is not
+   sticky. */
+.project-detail :is(.page-intro, .band) * {
+  scroll-margin-top: calc(var(--header-sticky-height) + var(--project-nav-height) + .75rem);
+}
+
+/* ---------------------------------------------------------------- global continuity repair, 2026-10-01
+   Seven cross-page handoffs were repaired and no page was redesigned. Three of the seven need a rule here: the
+   home's caption is now a line of links, the Projects index and the project pages each end with one line that
+   offers the reader a next step, and the project strip's two name regions have a phone treatment that shows more
+   of the destination. Everything else in this pass was markup, a script and a content label. */
+
+/* THE HOME CAPTION'S LINKS WENT WITH THE CAPTION (Home A2 final refactor, 2026-10-02). The hero no longer shows
+   three pictures and no longer captions them, so `.hero-note` reaches no element and its link treatment is
+   deleted rather than left for a caption that does not exist. The same treatment survives where a line of project
+   names still links out: the Expertise proof list. */
+
+/* THE TWO CLOSING CONTINUATIONS ARE THE LIGHTEST BLOCK ON THEIR PAGE. One line of text at the end of the Projects
+   index and one at the end of a project page; both are a `<p>` inside the shell the content already uses, so
+   neither adds a band, a heading or a card. The margin is the list's own gap scale and the colour is the muted
+   text colour the technology line and the proof line already use.
+   The links are no longer read from here. The project page's closing line carries the page's PRIMARY action now
+   (UI coherence pass, 2026-10-04), so a rule for `a` under `.detail-contact` would repaint the filled button in
+   the accent colour; the secondary action is stated by role in the actions block instead, and the sentence on
+   the Projects index keeps the treatment there because it is the only line of the two with no button in it. */
+.closing-actions,
+.detail-contact {
+  margin: clamp(1.75rem, 3vw, 2.5rem) 0 0;
+  color: var(--muted);
+}
+.closing-actions a { color: var(--accent); font-weight: 620; text-decoration: none; }
+.closing-actions a:hover { text-decoration: underline; }
+
+/* THE PROJECT STRIP GIVES ITS TWO NAME REGIONS MORE OF THE PHONE (measured, not guessed). At 390 px the row is
+   four regions in ~350 px: `All projects` and `N of 11` keep their natural width -- the product decision is that
+   the count stays -- and the two name cells share what is left. Before this pass the previous project's label got
+   79 px of its cell, of which the arrow and the inner gap took about 16, so a long title ellipsised to roughly
+   nine visible characters. Three bounded changes buy it about a fifth more, and all three are geometry rather
+   than content: the row's own gap narrows, the arrow and the position are set a size down, and the position's
+   reserved width drops from 8ch to 6.5ch -- still wider than the widest value this build prints (`11 of 11`),
+   because the digits are tabular and the value never leaves that shape. The label's font size is untouched: the
+   destination is named at the size the rest of the strip is read at. Nothing here changes the bar's height, its
+   one line, its four regions, the ellipsis, the full accessible name or the position cue. */
+@media (max-width: 46rem) {
+  .project-nav__row { gap: 0 .35rem; }
+  .project-nav__step { gap: .25rem; }
+  .project-nav__arrow { font-size: .92em; }
+  .project-nav__position { min-width: 6.5ch; font-size: .92em; }
+}
+
+/* ---------------------------------------------------------------- mobile home pass, 2026-10-01
+
+   A phone-only pass on the top of the Home, asked for by the owner after the hero title change: what was wrong
+   was the density of the page's first screen -- branding, navigation, title and pillars together -- not the
+   title, which is left exactly as it is. Every rule below lives inside a phone query, so no tablet or desktop
+   rendering can match it, and none of them changes a token, the markup or a word of copy.
+
+   MEASURED BEFORE THE PASS, in Chrome, one line per viewport
+   (`.casllm-toolbox/local/global-content-2026-10-01/home-mobile-audit-before.json`):
+
+     320x568  header 128.0   brand 66.2 (role 4 lines)  pillars 113.7 (3 rows)  first work 362.2 (64% of the screen)
+     360x800  header 115.6   brand 53.9 (role 3 lines)  pillars 113.7 (3 rows)  first work 385.8 (48%)
+     390x844  header 115.6   brand 53.9 (role 3 lines)  pillars  73.4 (2 rows)  first work 384.8 (46%)
+
+   Three findings, and the three rules that answer them:
+
+   1. The header is the largest block on the screen -- 13.7% of a 390x844 viewport and 22.5% of a 320x568 one --
+      and most of it is `.brand-role`: the whole identity string in uppercase with `.14em` of tracking, which
+      wraps to three lines on a normal phone and four on the narrowest one. Tightening the tracking and the size
+      takes it to two lines with the same words, the same case and the same colour, and trims the shell's own
+      padding. Nothing is hidden and no line is clamped: the label is the same sentence, set to fit.
+   2. The five pillars fit two rows from 390px up and take three below it. The small-phone query below is the
+      widest viewport that took three rows, `24rem`, so 390 and 414 keep the size they already had.
+   3. The hero was centred in its grid row, so the air a shorter top block freed would have reappeared as a gap
+      above the title -- measured at 94.5px at 390x844 before this pass, and the reason compacting alone is not
+      enough: it moves whitespace instead of removing it. The grid, the `100svh` minimum and the pinned footer it
+      was part of are deleted with the one-screen Home (Home A2 final refactor, 2026-10-02), so that third rule is
+      deleted too: on the final Home there is no flexible row left to align the hero inside, and every measured
+      saving now lands on the page's own height rather than on where the hero sits within a fixed screen. */
+@media (max-width: 46rem) {
+  .site-header > .shell { padding-block: .5rem .45rem; }
+  .brand-role { font-size: .6rem; letter-spacing: .04em; line-height: 1.3; }
+}
+
+/* The small phone, and nowhere else: `24rem` (384px) is the widest viewport that took three rows of pillars and
+   the one where the branding took four lines, so the extra step lives here. It is a step rather than a fix at one
+   width -- 320 and 375 improve together -- and the label step is small on purpose: a chip is a label, not body
+   copy. The mark gives back a little of its own width to the role beside it, which is what lets the same sentence
+   fit in fewer lines.
+
+   THE GUTTER IS THE ONE THAT DECIDES THE ROW COUNT, and that is a measurement rather than a theory. At 320 the
+   five pillars total 515.9px of label and gap, which fits two rows of the 280px content column -- but the
+   browser packs them greedily, and its second row came to 280.9px against a 280px column: 0.9px over. Shrinking
+   the label until that 0.9px is gone would leave the arrangement one font metric away from flipping, so the
+   column is widened instead and the labels stay readable. The widening was scoped to `page-home`, which the final
+   Home no longer carries (Home A2 final refactor, 2026-10-02), so it is scoped to the hero's own shell instead:
+   the pills are only on the Home, and every other route keeps the gutter it has always had. The `page-home` shell
+   rule is deleted with the class rather than widened to every route, because a global gutter change is a
+   site-wide decision and this is a Home measurement. */
+@media (max-width: 24rem) {
+  .hero > .shell { width: min(100% - 2rem, var(--max)); }
+  .brand { gap: .5rem; }
+  .brand-mark { width: 1.35rem; height: 1.35rem; }
+  .brand-role { font-size: .57rem; letter-spacing: .03em; }
+  .hero-pillars { gap: .3rem; }
+  /* .68rem, and the number is measured rather than chosen: at .72rem the same five labels total 545.4px, which
+     fits two rows in aggregate and still took three at 320, because the browser's greedy packing does not
+     redistribute what the aggregate would allow. .68rem is the largest size that measured two rows there. */
+  .hero-pillars li { padding: .3rem .42rem; font-size: .68rem; }
+}
