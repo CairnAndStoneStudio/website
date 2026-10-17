@@ -4,8 +4,8 @@
     <meta charset="utf-8">
     <meta http-equiv="Content-Security-Policy" content="default-src &#x27;none&#x27;; script-src &#x27;self&#x27;; style-src &#x27;self&#x27;; img-src &#x27;self&#x27;; base-uri &#x27;none&#x27;; form-action &#x27;none&#x27;; object-src &#x27;none&#x27;">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Technical lead work on real-time Unreal Engine C++ systems: architecture, implementation, technical review, performance and developer tooling.">
-    <title>Real-Time Unreal Engine C++ Systems — Cairn and Stone Studio</title>
+    <meta name="description" content="Technical Lead for Harmattan AI on a distributed Unreal Engine 5 C++ simulation platform: architecture, deterministic simulation and replay, procedural generation, performance and engineering tooling.">
+    <title>Distributed 3D Simulation &amp; Unreal Engine Systems — Cairn and Stone Studio</title>
     <link rel="canonical" href="https://cairnandstone.studio/projects/unreal-engine-cpp-systems/">
     <link rel="stylesheet" href="../../assets/styles.css">
     <link rel="icon" type="image/svg+xml" href="../../assets/media/logos/cairn-and-stone.svg">
@@ -23,9 +23,9 @@
     </header>
     <main id="main"><article class="project-detail">
         <header class="page-intro"><div class="shell">
-          <h1>Real-Time Unreal Engine C++ Systems</h1>
-          <p class="detail-context">Cairn and Stone Studio · Sep 2026 – present</p>
-          <p class="lede detail-summary">Recent work has focused on Unreal Engine C++ systems for real-time simulation. My responsibilities include software architecture, implementation, technical review, performance, reliability and production tooling.</p>
+          <h1>Distributed 3D Simulation &amp; Unreal Engine Systems</h1>
+          <p class="detail-context">Harmattan AI · Technical Lead · Sep 2026 – present</p>
+          <p class="lede detail-summary">Through Cairn and Stone Studio, I lead the architecture and technical delivery of a distributed 3D simulation platform built with Unreal Engine 5 and C++.</p><p class="lede">I work directly with Harmattan AI to turn evolving gameplay and simulation requirements into concrete technical designs.</p>
         </div></header>
         <nav class="project-nav" data-project-nav aria-label="Project navigation">
           <div class="shell project-nav__row">
@@ -36,11 +36,11 @@
           </div>
         </nav>
         <section class="band band--paper band--tight"><div class="shell">
-          <section class="detail-section"><h2>What I did</h2><div class="detail-content prose"><p>I work across architecture and implementation on a production C++ codebase. I own the architectural decisions and review engineering changes. I also work with the design and product side to turn their requirements into maintainable systems.</p><p>I build and improve the tooling used to develop and validate the software. Performance, reliability and predictable behaviour are part of that work rather than a separate phase.</p></div></section>
+          <section class="detail-section detail-section--story"><h2>What I did</h2><div class="detail-content prose"><h3>Distributed architecture</h3><p>I designed the platform's distributed architecture and deterministic lockstep simulation model, integrating an Unreal Engine simulation core with isolated Docker workloads through Protobuf contracts.</p><h3>Deterministic re-simulation</h3><p>Recorded inputs allow complete runs to be re-simulated, with byte-identical results verified under tested degraded network conditions.</p><h3>Procedural systems</h3><p>I designed procedural 3D generation and SVO/A* navigation, including automated consistency checks.</p><h3>CPU rendering feasibility</h3><p>I evaluated CPU rendering approaches as potential alternatives to GPU-backed infrastructure, using performance experiments to assess feasibility and cost trade-offs.</p><h3>Engineering workflow</h3><p>I designed and implemented a multi-agent engineering workflow with isolated contexts, independently authored tests and separate verification, while retaining ownership of technical decisions, software design and acceptance.</p></div></section>
           
-          <section class="detail-section"><h2>Technical proof</h2><div class="detail-content"><ul class="proof-list"><li class="proof-item"><h3 class="proof-label">Architecture</h3><p class="proof-detail">Ownership of the architecture and technical review across a production C++ codebase.</p></li><li class="proof-item"><h3 class="proof-label">Unreal Engine systems</h3><p class="proof-detail">Core real-time systems built in Unreal Engine 5 with C++.</p></li><li class="proof-item"><h3 class="proof-label">Simulation architecture</h3><p class="proof-detail">Real-time simulation systems, from technical design to implementation.</p></li><li class="proof-item"><h3 class="proof-label">Performance</h3><p class="proof-detail">Engineering work focused on performance, predictable behaviour and reliability.</p></li><li class="proof-item"><h3 class="proof-label">Developer tools</h3><p class="proof-detail">Tooling that supports development, validation and review workflows.</p></li></ul></div></section>
-          <p class="detail-tech">C++ · Unreal Engine 5</p>
-          <p class="detail-contact">Interested in similar work? <a class="button" href="../../contact/">Contact</a></p>
+          <section class="detail-section detail-section--proof"><h2>Technical proof</h2><div class="detail-content"><ul class="proof-list"><li class="proof-item"><h3 class="proof-label">Simulation architecture</h3><p class="proof-detail">Deterministic lockstep execution, synchronized distributed simulation and input-based re-simulation with verified reproducibility.</p></li><li class="proof-item"><h3 class="proof-label">Unreal Engine systems</h3><p class="proof-detail">C++ simulation and gameplay systems with automated tests and architectural dependency rules enforced in CI.</p></li><li class="proof-item"><h3 class="proof-label">3D math</h3><p class="proof-detail">Procedural 3D generation and SVO/A* navigation with versioned artifacts and automated consistency checks.</p></li><li class="proof-item"><h3 class="proof-label">Distributed systems</h3><p class="proof-detail">Container-isolated workloads, concurrent execution and versioned Protobuf communication contracts.</p></li><li class="proof-item"><h3 class="proof-label">Performance</h3><p class="proof-detail">Evaluation of CPU rendering approaches to reduce GPU infrastructure costs, using benchmarks to assess feasibility, optimizations and technical trade-offs.</p></li><li class="proof-item"><h3 class="proof-label">Technical leadership</h3><p class="proof-detail">Direct collaboration with the client on evolving requirements, with ownership of architecture, technical decisions and delivery.</p></li><li class="proof-item"><h3 class="proof-label">Developer tools</h3><p class="proof-detail">Designed and implemented a multi-agent engineering workflow with specialized models, isolated contexts, independent test development and separate verification.</p></li></ul></div></section>
+          <p class="detail-tech">C++ · Unreal Engine 5 · Docker · Protobuf</p>
+          <p class="detail-contact">Interested in similar work? <a class="button" href="../../contact/">Get in touch</a></p>
         </div></section></article></main>
     <footer class="site-footer"><div class="shell"><p>© 2026 Cairn and Stone Studio — Mathieu Lagarde, Senior Software Engineer / Tech Lead — Game, Simulation &amp; Backend Systems</p><nav aria-label="Utility navigation"><a href="../../legal/">Legal</a> <a href="../../privacy/">Privacy</a> <a href="https://fr.linkedin.com/in/mathieulagarde" rel="me noreferrer">LinkedIn</a></nav></div></footer>
   </body>

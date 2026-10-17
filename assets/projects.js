@@ -35,12 +35,30 @@
   // A card is shown when no area is chosen, or when the chosen area is one the project belongs to. Every
   // value on screen is a value that returns at least one project, so the result is never empty.
   const matches = (card) => !chosen || areasOf(card).has(chosen);
+  // THE CARD ANSWERS THE FILTER (2026-10-06). A chosen area is a question about one kind of capability, and
+  // the card's summary has to answer every reader at once. So when -- and only when -- an area is chosen,
+  // the one evidence paragraph the renderer wrote for that area takes the summary's place, and the summary
+  // comes back the moment no area is chosen. Both paragraphs are in the document already; this only decides
+  // which of them is visible, and with no script at all the evidence stays hidden and every card reads
+  // exactly as it did before.
+  const summarize = (card) => {
+    const summary = card.querySelector("[data-card-summary]");
+    const evidence = Array.from(card.querySelectorAll("[data-evidence-domain]"));
+    let shown = null;
+    evidence.forEach((paragraph) => {
+      const selected = chosen !== "" && paragraph.dataset.evidenceDomain === chosen;
+      paragraph.hidden = !selected;
+      if (selected) shown = paragraph;
+    });
+    if (summary) summary.hidden = shown !== null;
+  };
   const render = (synchronize) => {
     buttons.forEach((button) => {
       button.setAttribute("aria-pressed", String(button.dataset.filterValue === chosen));
     });
     cards.forEach((card) => {
       card.hidden = !matches(card);
+      summarize(card);
     });
     if (synchronize) writeQuery();
   };

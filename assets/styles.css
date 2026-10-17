@@ -16,7 +16,14 @@
   --ink: #141a17;
   --ink-soft: #33403a;
   --muted: #55605a;
-  --muted-light: #6f7a73;
+/* THE LAST MUTED TONE, MEASURED AND CORRECTED (quality pass, 2026-10-06). `--muted-light` is used in exactly
+   one place -- the header's role byline -- and it measured 3.88:1 against `--sand`, below the 4.5:1 WCAG AA
+   minimum for text at that size (10.7px, weight 620). It was the site's one known contrast shortfall, and it
+   was known: the project strip stopped using this token for exactly that reason, and its rule below still
+   says so. The tone is darkened to the nearest value that clears the bound on every surface it can sit on
+   -- 4.90:1 on sand, 5.31:1 on paper, 4.69:1 on `--stone-soft` -- which is one step of grey and no change to
+   the design. Keep this token above 4.5:1 on sand, or the byline is a defect again. */
+  --muted-light: #5f6a63;
   --on-forest: #f4f1ea;
 
   --accent: #14604d;
@@ -30,17 +37,48 @@
   --gutter: clamp(1.25rem, 4vw, 3.25rem);
   --radius: 3px;
 
-  /* THE STICKY CHROME, MEASURED. `--header-sticky-height` is the global header's own height in the widths where
-     it is sticky, and it exists because a second sticky element has to know where the first one ends. Measured in
-     Chrome on 2026-09-30 at 737, 760, 768, 820, 900, 1024, 1180, 1280 and 1440 px: 68.19 px at every one of them,
-     so the value is a measurement rather than a magic number, and the strip tucks 0.03 px under the header's
-     border by design -- a hair of overlap is invisible, a hair of gap shows content scrolling between them.
-     Below 46rem the header is `position: static`, which is why the token is zero there: the token means "the
-     height of the sticky header at this viewport", and every consumer reads it that way instead of guessing.
-     `--project-nav-height` is the strip's own height, so the focus offset below is computed from the two chrome
-     heights rather than typed as a third constant. */
-  --header-sticky-height: 4.26rem;
-  --project-nav-height: 2.75rem;
+  /* ONE VIEWPORT UNIT, DECLARED ONCE, so a calculation can be read as the calculation it is. `--viewport` is
+     one hundredth of the viewport's width, and every size below is written as a sum of the type scale and a
+     step of the viewport: nothing in this file is a size that ignores the window it is read in. `svh` is used
+     where the height matters rather than the width, because the small-viewport unit is the one the reader's
+     first screen is actually measured against. */
+  --viewport: 1vw;
+  --viewport-height: 1svh;
+
+  /* THE STICKY CHROME, CALCULATED RATHER THAN MEASURED. These two tokens are the only sizes on the page that
+     have to agree with something the browser lays out itself -- the header's own height, and the strip's -- and
+     they are read by `top:`, by `scroll-margin-top` and by the focus offsets for exactly that reason. They used
+     to be two decimals copied out of a Chrome measurement (`4.26rem`, `2.75rem`); these are the same two
+     heights, written as what the browser computes: the type scale the row is set in, the viewport step that
+     carries it, and the padding and hairline that surround it. Measured at 320, 360, 390, 414, 600, 735, 768,
+     820, 900, 1024, 1180, 1280, 1440 and 1920 px, the calculations land on the heights the constants did, which
+     is the point of writing them this way: the numbers below are the arithmetic, not the result.
+
+     `--chrome-target` is the floor the strip's targets keep at every width (44 CSS px, the WCAG 2.2 target
+     minimum). `--project-nav-height` is the component that floor belongs to -- the step's own line box, one
+     target tall, which is what the scale gives the strip's `--step--1` text, held there by the target the
+     calculation and the floor agree on. `--project-nav-band` is the strip the reader sees: that target, the
+     row's quarter-rem above and below it, and the closing hairline, which is where the band's few pixels over
+     the target come from -- 44 + 8 + 1 = 53, the height the strip has had since 2026-10-16. `--header-sticky-height`
+     is the header's one row -- the navigation's own target, its block padding on both sides and its hairline --
+     and it equals the header's rendered height, which is what `top: var(--header-sticky-height)` on the strip
+     depends on: the strip pins exactly where the header ends. Below 46rem the header is `position: static` and
+     the token is zeroed in that block, because the token means "the height of the sticky header at this
+     viewport", and at those widths there is no sticky header to measure. */
+  --chrome-target: 2.75rem;
+  --header-row: clamp(2.5rem, 24.6 * var(--viewport), 2.8125rem);
+  --project-nav-row: .25rem;
+  --hairline: 1px;
+  --header-sticky-height: calc(var(--header-row) + 1.45rem);
+  --project-nav-height: max(var(--chrome-target), calc(var(--header-row) / 2 + .768rem + .018333 * var(--viewport)));
+  --project-nav-band: calc(var(--project-nav-height) + (2 * var(--project-nav-row)) + var(--hairline));
+
+  /* THE TWO HEIGHTS THAT USED TO BE HERE, RECORDED SO THE SUBSTITUTION CAN BE CHECKED. The block above replaces
+     `--header-sticky-height: 4.26rem` and `--project-nav-height: 2.75rem`, which were Chrome measurements of
+     2026-09-30 and 2026-10-16 rather than sizes the page could derive. Both are now calculated, and the
+     browser's own numbers at 737, 760, 768, 820, 900, 1024, 1180, 1280 and 1440 px are what the calculation is
+     held to: the header's height was 68.19 px at every one of them, and the strip's target floor was the
+     `2.75rem` the owner's second note of 2026-10-16 left standing after the bandeau was called too thick. */
 
   --step--1: clamp(.82rem, .79rem + .12vw, .89rem);
   --step-0: clamp(1rem, .96rem + .16vw, 1.09rem);
@@ -165,6 +203,13 @@ main { display: block; }
 .band { padding-block: var(--section); }
 .band--paper { background: var(--paper); }
 .band--tight { padding-block: clamp(2.25rem, 4vw, 3.5rem); }
+/* THE COMPACT VISUAL'S BAND (final UX adjustment pass, 2026-10-06). It is `band--paper`, like the story band
+   directly beneath it, so the two read as one surface; only its padding differs, because a section break
+   between the introduction and the reader's first look at the project would be a third rhythm on a page
+   that has two. Its top gap is the sticky strip's own bottom room (owner, 2026-10-16): the strip sits directly
+   above it on the three pages that split their media, and a visual pressed against the navigation reads as part
+   of the chrome. The bottom gap is the story band's. */
+.band--media { padding-block: clamp(1.25rem, 3vw, 2rem) clamp(1.5rem, 3vw, 2.5rem); }
 /* `.band--stone`, `.band--forest` and `.band--flush-top` were emitted by no page after the Home A2 final
    refactor (2026-10-02) and are deleted rather than kept as an unused tone system: every band this build
    writes is a `.band--paper` or a `.band--tight`, and the Home's closing block is its own component rather
@@ -441,6 +486,12 @@ p:last-child { margin-bottom: 0; }
    Nothing inside a card is interactive now except the one anchor, so the overlay is left on top and the
    whole surface opens the project. */
 .card-summary { margin: 0; color: var(--ink-soft); max-width: 42rem; }
+/* THE SENTENCE A CHOSEN AREA ASKS FOR (2026-10-06). It is the same paragraph in the same slot as the
+   summary -- one measure, one colour, one line height -- because it replaces it rather than joining it:
+   the card does not grow a second paragraph when a chip is pressed, it answers the question that was
+   asked. `hidden` is what does the swapping, so a reader with no script sees the summary and nothing
+   else, and this rule deliberately sets no `display` that would outrank it. */
+.card-evidence { margin: 0; color: var(--ink-soft); max-width: 42rem; }
 /* Where and when. The card used to print the schema's own word for the project's kind here -- twice, in
    fact, once as a plate label and once as this eyebrow. These are the two facts that decide whether to open
    the card: who the work was for, and when it happened. */
@@ -499,6 +550,7 @@ p:last-child { margin-bottom: 0; }
   .project-list > .project-card--text .card-title { grid-area: title; }
   .project-list > .project-card--text .card-facts { grid-area: facts; }
   .project-list > .project-card--text .card-summary { grid-area: summary; }
+  .project-list > .project-card--text .card-evidence { grid-area: summary; }
   .project-list > .project-card--text .card-tags { grid-area: tags; justify-content: flex-end; }
 }
 
@@ -658,15 +710,32 @@ button:focus-visible { outline: .18rem solid var(--accent-bright); outline-offse
 .policy-list a:hover { border-color: var(--forest); }
 .breadcrumb { display: flex; flex-wrap: wrap; gap: .5rem; margin: 0 0 1.5rem; color: var(--muted); font-size: var(--step--1); }
 .page-intro { padding-block: clamp(2rem, 4vw, 3.25rem) 0; }
+/* THE STANDFIRST MAY BE ONE PARAGRAPH OR TWO, AND THE GAP BETWEEN ITS PARAGRAPHS IS THE SITE'S OWN (final UX
+   adjustment pass, 2026-10-06). `:last-child` stopped clearing the margin as soon as a second paragraph
+   arrived, so the introduction ended with the browser's default margin instead of the 1.25rem every other
+   page closes its header on. `:last-of-type` is the paragraph that ends the block, in both cases. */
 .page-intro .lede { margin-bottom: 1.25rem; }
+.page-intro .lede:last-of-type { margin-bottom: 0; }
 /* Opening a page is a composition too: the title holds the left, the argument sits beside it. */
 @media (min-width: 60rem) {
   .page-intro .shell { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); column-gap: clamp(2rem, 5vw, 4.5rem); }
   .page-intro .shell > .eyebrow { grid-column: 1; }
-  .page-intro .shell > h1 { grid-column: 1; }
-  .page-intro .shell > .lede { grid-column: 2; grid-row: 1 / span 3; align-self: end; max-width: 38rem; }
-  .page-intro .shell > :not(.eyebrow):not(h1):not(.lede) { grid-column: 1 / -1; }
+  .page-intro .shell > h1 { grid-column: 1; grid-row: 1 / span 3; }
+  /* The arguments stack in the right column, under each other, in the order the content states them: the
+     context line, then the standfirst's one paragraph or its two. Each shares the measure below, so the
+     second paragraph lines up with the first rather than running the shell's width. */
+  .page-intro .shell > .detail-context { grid-column: 2; grid-row: 1; align-self: end; }
+  .page-intro .shell > .lede { grid-column: 2; max-width: 38rem; }
+  .page-intro .shell > .lede:first-of-type { grid-row: 2; align-self: start; }
+  .page-intro .shell > .lede + .lede { grid-row: 3; }
+  .page-intro .shell > :not(.eyebrow):not(h1):not(.lede):not(.detail-context) { grid-column: 1 / -1; }
 }
+
+/* THE PROJECT'S VISUAL, WHETHER IT IS THE COMPACT ONE ABOVE THE STORY OR THE PLATE BELOW IT (final UX
+   adjustment pass, 2026-10-06). Both are one `figure` in the same band, and the wrapper declares nothing
+   of its own: the plate inside it carries the frame. The band above the story is the header's own padding
+   plus this one, so the compact visual sits under the introduction rather than apart from it. */
+.detail-figure { margin: 0; }
 
 [hidden] { display: none !important; }
 
@@ -674,6 +743,14 @@ button:focus-visible { outline: .18rem solid var(--accent-bright); outline-offse
 
 @media (max-width: 46rem) {
   :root { --section: clamp(2.75rem, 8vw, 4rem); --header-sticky-height: 0px; }
+  /* The header's own row is smaller here than the calculation at the top of the file would make it -- the phone
+     header stacks the identity over the navigation, so the row the strip has to clear is not the header's
+     height. The two tokens the strip reads are recomputed for the shapes the phone actually has, in the same
+     terms as the desktop ones: the navigation's target floor, and the viewport's own step. */
+  :root {
+    --header-row: clamp(2.25rem, 22 * var(--viewport), 2.5rem);
+    --project-nav-height: calc(var(--chrome-target) + .25 * var(--viewport));
+  }
   .site-header > .shell { flex-direction: column; align-items: flex-start; gap: .1rem; padding-block: .7rem .5rem; }
   .site-header { position: static; }
   .primary-nav { width: 100%; }
@@ -817,10 +894,16 @@ button:focus-visible { outline: .18rem solid var(--accent-bright); outline-offse
   aspect-ratio: 2.8 / 1;
   background: var(--stone-soft);
 }
+/* THE COMPACT FRAME (final UX adjustment pass, 2026-10-06): one capture, below the introduction, in the
+   project page's own composition. It is the same plate -- same border, same radius, same crop rules --
+   with a wider ratio and a height ceiling, so the visual a reader meets early is a ribbon rather than a
+   second hero. `max-height` is what stops a wide desktop from turning 21:9 into a 600 px band; the ratio
+   still governs where the row is narrower than the ceiling. */
+.plate--compact { aspect-ratio: 21 / 9; max-height: clamp(11rem, 24vw, 17rem); }
 .plate--medley .medley-primary { grid-column: 1; grid-row: 1 / span 2; }
 /* The four tiles need no columns of their own: with the primary holding column 1 across both rows, the
    default row flow fills (1,2) (1,3) (2,2) (2,3) in exactly the order the content declares them. */
-.plate--medley .media-cell { display: block; width: 100%; height: 100%; object-fit: cover; }
+.plate .media-cell { display: block; width: 100%; height: 100%; object-fit: cover; }
 
 /* The focal point only nudges which part of a 16:9 capture survives a near-square cell. Centre is the
    default and stays the default for anything the content does not name. */
@@ -983,7 +1066,12 @@ button:focus-visible { outline: .18rem solid var(--accent-bright); outline-offse
    than a second grid template. The old layout's heading column existed to align four schema rows; with two
    prose sections it only pushed the text right. The shared grid stays for the long-form pages that want it. */
 
-.project-detail .page-intro { padding-block: clamp(1.5rem, 3vw, 2.25rem) 0; }
+.project-detail .page-intro { padding-block: clamp(1.5rem, 3vw, 2.25rem) clamp(1.25rem, 2.4vw, 1.75rem); }
+/* The hero had no bottom padding (final UX adjustment pass, 2026-10-06) because the compact visual's band
+   followed it directly and the band supplied the gap. The strip is between the two again, so the hero needs its
+   own bottom room: it separates the standfirst from the navigation, and the strip's own surface then gives the
+   navigation its separation from "What I did". Slightly less than the top padding (owner, 2026-10-16, second
+   note): the strip is 53 px of chrome and the gap above it does not have to match the one above the title. */
 /* One column at every width: the hero used to put the title on the left and the argument beside it, and the
    reader met the summary and the card in the same glance. The story is a stack, so the grid is only the
    spacing between the three lines. */
@@ -1001,6 +1089,10 @@ button:focus-visible { outline: .18rem solid var(--accent-bright); outline-offse
 }
 .project-detail .detail-summary { margin: 0; }
 .project-detail .band > .shell { display: grid; gap: clamp(1.75rem, 4vw, 2.75rem); }
+/* THE VISUAL'S OWN BAND IS NOT THE STORY'S BAND (final UX adjustment pass, 2026-10-06). The rule above lays
+   out everything the story band holds; the compact figure's band holds one block and places it, so it keeps
+   the shell's plain block behaviour. The `:not()` is what keeps the two from depending on source order. */
+.project-detail .band--media > .shell { display: block; gap: 0; }
 .project-detail .detail-section { display: block; }
 /* ONE MEASURE FOR THE WHOLE STORY. The summary takes `38rem` from the shared intro rule, and the work
    paragraph and the proof took `--prose` (44rem) until the first measurement of this composition reported
@@ -1014,6 +1106,73 @@ button:focus-visible { outline: .18rem solid var(--accent-bright); outline-offse
    is the middle level the page was missing: the audit found a 3.5x jump from title to section heading while
    three near-identical micro-labels competed at the bottom. */
 .project-detail .detail-section > h2 { margin-bottom: .85rem; font-size: var(--step-2); }
+
+/* ---------------------------------------------------------------- the story's own rhythm
+
+   LABELLED CONTRIBUTIONS, AND WHY THE STORY HAS SUBHEADINGS (editorial pass, 2026-10-06). A project's body
+   used to be one paragraph carrying every contribution it had -- four or five sentences, one block, no
+   anchor -- which is the shape scanning handles worst. The eye-tracking evidence for the *layer-cake*
+   pattern is that readers fixate headings and subheadings and read the body between them only where the
+   subheadings are visually distinct, predictable, and clearly bound to their own text; a page of unbroken
+   prose gets the F-pattern instead, which skips everything that is not at the start of a line. So the recipe
+   is three to five `###` labels per project, and this block is what makes them work:
+
+     * the label is one type step above the body and nothing else -- same typeface, `--ink`, no colour, no
+       rule, no icon, no uppercase. NN/g's own warning is the reason: a subhead that shouts reads as an
+       advertisement and is skipped;
+     * there is clearly more space above a label than below it, which is what binds it to the paragraphs it
+       introduces rather than to the block above it;
+     * paragraphs are separated by more than one line height. The shared `.prose` gap is `1rem` and the line
+       box is about `1.7rem`, so consecutive paragraphs read as one block -- the wall of text, measured. */
+.project-detail .detail-section--story > .detail-content.prose > * + * {
+  margin-top: clamp(1.15rem, 2.2vw, 1.5rem);
+}
+.project-detail .detail-section--story > .detail-content.prose h3 {
+  /* The space above a label is the whole mechanism, so it is the number that scales with the viewport: on a
+     phone a label costs a line **plus** its leading, and five of them at the desktop value added 320 px to
+     the page -- measured, and the reason the phone value is the tight end of this clamp. */
+  margin: clamp(1.4rem, 3vw, 2.1rem) 0 .35rem;
+  font-size: var(--step-1); font-weight: 660; letter-spacing: -.012em; line-height: 1.2; color: var(--ink);
+}
+.project-detail .detail-section--story > .detail-content.prose > h3:first-child { margin-top: 0; }
+.project-detail .detail-section--story > .detail-content.prose > h3 + * { margin-top: .35rem; }
+
+/* ---------------------------------------------------------------- the supporting column
+
+   THE BAND IS TWO COLUMNS WHERE THERE IS ROOM FOR TWO COMFORTABLE ONES (editorial pass, 2026-10-06).
+   Measured before this pass at 1440 px: the page's blocks were 608 px wide inside a 1216 px band, so half of
+   every band was empty, and on the projects with the longest stories the evidence did not begin until 1043 px
+   -- past the first screen -- while the images sat behind the whole story. The composition now puts the story
+   and its evidence side by side, and the plate spans the band beneath both.
+
+   IT IS THE SAME MARKUP AND THE SAME ORDER. The story still precedes the evidence in the document, and the
+   plate still follows the story; the grid only places them, so a reader on a phone -- or with the stylesheet
+   gone -- reads exactly the order this page has always had, and the two column widths are the same 38 rem
+   measure the page already used, capped, so neither column can grow past a comfortable line.
+
+   THE PLATE KEEPS THE FULL BAND. A five-image medley in a 576 px column is a contact sheet, not a project
+   photograph, and the plate is the one block that was composed for the wide measure.
+
+   68rem, NOT 62: below it the two columns would each be under a comfortable measure, and a 45-character
+   column is worse than a stacked page -- the platform's own line-length evidence (WCAG 1.4.8 and the Dyson &
+   Haselgrove direction) is that both too long and too short read worse. */
+@media (min-width: 68rem) {
+  .project-detail .band:not(.band--media) > .shell {
+    grid-template-columns: minmax(0, 38rem) minmax(0, 38rem);
+    justify-content: space-between;
+    align-items: start;
+    column-gap: clamp(2rem, 4vw, 4rem);
+  }
+  .project-detail .detail-section--story { grid-column: 1; grid-row: 1; }
+  .project-detail .detail-section--proof { grid-column: 2; grid-row: 1; }
+  /* The plate is the one block the story never shares a row with: it takes the band, under both columns. */
+  .project-detail .band > .shell > .detail-media { grid-column: 1 / -1; grid-row: 2; }
+  /* And the page closes under the story it belongs to: the technology line's hairline is the width of the
+     reading column rather than the whole band, which is what it was before this pass and what keeps the
+     closing material from re-opening the empty half the two columns just closed. */
+  .project-detail .band > .shell > .detail-tech,
+  .project-detail .band > .shell > .detail-contact { grid-column: 1; }
+}
 .project-detail .proof-list {
   display: grid; gap: 1.1rem; max-width: 38rem; margin: 0; padding: 0; list-style: none;
 }
@@ -1035,22 +1194,25 @@ button:focus-visible { outline: .18rem solid var(--accent-bright); outline-offse
 
 /* ---------------------------------------------------------------- project navigation strip
 
-   EVERY PUBLISHED PROJECT'S NAVIGATION. The compact project-level strip: previous project, the way back to
-   Projects, the project's place in the canonical chronology, and the next project -- always reachable while the
-   reader is inside a long page instead of only at its end. One component, rendered for all eleven public
-   projects from the index's own order, with no per-project markup and no per-project CSS. It replaced the old
-   bottom `Back to all projects` control, which the strip duplicates in the same view: it is sticky, so it is
-   still on screen wherever that control used to be.
+   EVERY PUBLISHED PROJECT'S NAVIGATION, AND THE LAST THING ON THE PAGE (final UX adjustment pass,
+   2026-10-06). The compact project-level strip: previous project, the way back to Projects, the project's
+   place in the canonical chronology, and the next project. One component, rendered for every public project
+   from the index's own order, with no per-project markup and no per-project CSS.
 
-   IT IS NAVIGATION, NOT CONTENT, and it is built to stay subordinate to the page: one row, `--step--1` type, no
-   card, no pill, no shadow, no blur, no gradient, no icon and no thumbnail. The surface is the story's own
-   `--paper` and one hairline separates it from the content scrolling under it. The strip is in the flow between
-   the hero and "What I did", so the first screen still reads title, context, summary -- and only then a control
-   the reader may ignore.
+   IT SITS BETWEEN THE INTRODUCTION AND THE STORY, AND IT IS STICKY (owner, 2026-10-16). The 2026-10-06 pass
+   moved it to the foot of the page and made it static; the owner asked for the previous behaviour back, so it
+   is sticky under the global header again -- `top: var(--header-sticky-height)` puts it exactly there, and the
+   token is zero where the header is not sticky, so the desktop and the phone need no second rule and no script
+   measures an offset.
 
-   STICKY IS CSS ONLY. `top: var(--header-sticky-height)` puts it exactly under the global header, and the token
-   is zero where the header is not sticky (below 46rem), so the same rule gives the desktop and the phone
-   behaviour without a second rule, a scroll listener or a measured offset in script. */
+   IT GOT ROOM RATHER THAN A REDESIGN. The owner's note on the sticky version was that it was cramped, so the
+   row is taller than the `2.75rem` floor it used to sit on (`--project-nav-height` is 3.5rem now), the strip
+   carries its own vertical padding, and it keeps a hairline of space above and below the row so the controls do
+   not touch the header or the content scrolling underneath. Nothing else about it changed: same four regions,
+   same type step, no card, no pill, no shadow, no blur, no gradient, no icon and no thumbnail.
+
+   IT IS NAVIGATION, NOT CONTENT, and it is built to stay subordinate to the page. The surface is the story's
+   own `--paper` and one hairline separates it from the content scrolling under it. */
 .project-nav {
   position: sticky;
   top: var(--header-sticky-height);
@@ -1062,13 +1224,18 @@ button:focus-visible { outline: .18rem solid var(--accent-bright); outline-offse
 }
 /* Four regions, always four even at the ends of the chronology: `All projects` and `N of 11` keep their natural
    width in the middle, and an empty name cell at either end holds the centre group still, so neither orientation
-   control slides sideways on the newest or the oldest project. */
+   control slides sideways on the newest or the oldest project.
+
+   THE ROW HAS NO FLOOR AND LITTLE PADDING (owner, 2026-10-16, second note). The floor was first put on the
+   row, then on the cells, and the strip came out 70 px tall; the owner read it and said the bandeau was too
+   thick. The target's height belongs to the *anchor*, not to the band, so the row only holds the four cells on
+   one line and pads them by a quarter of a rem. See `.project-nav a` below for the target's own size. */
 .project-nav__row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto auto minmax(0, 1fr);
   align-items: stretch;
   gap: 0 clamp(.75rem, 2vw, 1.5rem);
-  min-height: var(--project-nav-height);
+  padding-block: var(--project-nav-row);
 }
 .project-nav__cell { display: flex; align-items: center; min-width: 0; }
 /* The name cells give up width first: they are the only flexible columns, and their label truncates rather than
@@ -1077,12 +1244,19 @@ button:focus-visible { outline: .18rem solid var(--accent-bright); outline-offse
 .project-nav__cell--next { justify-content: flex-end; }
 .project-nav__cell--home { justify-content: center; }
 .project-nav__cell--place { justify-content: center; }
-/* The anchors fill the row, so the target is the strip's own height rather than the text's line box: measured at
-   `--step--1`, a text-height anchor is 21-22.8 px tall, which is under the 24x24 CSS px minimum WCAG 2.2 sets for
-   a target. They stretch, and their own content is centred inside them. The label truncates inside its own span
-   instead of on the anchor: an anchor that clips its own overflow clips its focus ring with it. */
+/* THE ANCHOR IS THE TARGET, SO THE ANCHOR CARRIES THE HEIGHT (owner, 2026-10-16, second note). Measured at
+   `--step--1`, a text-height anchor is 21-22.8 px tall, under the 24x24 CSS px minimum WCAG 2.2 sets for a
+   target. It used to take its height from the strip's row, which is what made the band as tall as the target
+   plus padding; now the control declares its own `min-height` and its own `.35rem` of block padding -- 47 px
+   tall, comfortably over the minimum -- and the band is only as tall as that plus the row's quarter-rem. The
+   label truncates inside its own span instead of on the anchor, because an anchor that clips its own overflow
+   clips its focus ring with it. */
 .project-nav__step,
-.project-nav__return { display: flex; align-items: center; align-self: stretch; }
+.project-nav__return {
+  display: flex; align-items: center; align-self: stretch;
+  min-height: var(--project-nav-height);
+  padding-block: .35rem;
+}
 .project-nav__step {
   gap: .4rem;
   min-width: 0; max-width: 100%;
@@ -1090,9 +1264,12 @@ button:focus-visible { outline: .18rem solid var(--accent-bright); outline-offse
 }
 /* The ellipsis is visual only: the full title stays the anchor's text, its accessible name and its `title`. */
 .project-nav__label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-/* `--muted`, not `--muted-light`. The arrow and the place are text, and `--muted-light` measures 4.2:1 on this
-   surface -- the pair the page audit already reports as its commonest contrast shortfall. `--muted` is 6.17:1, so
-   the strip does not add a new instance of a defect the site is already carrying. */
+/* `--muted`, not `--muted-light`. The arrow and the place are text, and `--muted-light` measured 4.2:1 on this
+   surface when this rule was written -- the pair the page audit already reported as its commonest contrast
+   shortfall, and the reason this strip does not add an instance of it. The token itself was darkened on
+   2026-10-06 to clear AA where it is still used (the header byline); `--muted` stays the right tone here
+   because the strip's own text is smaller than the byline's and this is the value the layout was measured
+   with. */
 .project-nav__arrow { flex: none; color: var(--muted); }
 .project-nav__return { color: var(--accent); text-decoration: none; white-space: nowrap; }
 /* `8ch` is one character wider than the longest value this layout has to print (`12 of 12` on 2026-10-03, and
@@ -1103,16 +1280,17 @@ button:focus-visible { outline: .18rem solid var(--accent-bright); outline-offse
   color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums;
 }
 .project-nav a:hover { color: var(--forest); }
-/* The site's focus ring, drawn inside the strip's own edge: the header paints over this element's top edge by
-   z-index, and a ring that leaves the strip would be half-covered exactly where the reader is looking. */
+/* The site's focus ring, drawn just inside the strip's own edge: the strip is one text row with no padding of
+   its own, so a ring that left it would sit on the band above rather than around the control. */
 .project-nav a:focus-visible { outline-offset: -.18rem; }
 /* Nothing focused, and nothing scrolled to, may land underneath the sticky chrome (WCAG 2.2 Focus Not
    Obscured). `scroll-margin-top` is the whole mechanism -- no scroll listener, no script, no manual scroll
    correction -- and it is set on everything in the story's content areas rather than on a list of known targets,
    because the next section, figure or id this page grows is a target too. It is scoped away from the strip
-   itself: the strip is the chrome, and it is never the thing being scrolled to. The offset is the two chrome
-   heights plus a line of air, computed from the tokens, and it reads zero for the header where the header is not
-   sticky. */
+   itself: the strip is the chrome, and it is never the thing being scrolled to.
+   THE OFFSET IS THE HEADER AND THE STRIP AGAIN (owner, 2026-10-16). The strip is sticky once more, so a target
+   has both surfaces to clear, and the token that measures the strip's own height is what keeps this honest when
+   the strip grows. The trailing `.75rem` is breathing room, not chrome. */
 .project-detail :is(.page-intro, .band) * {
   scroll-margin-top: calc(var(--header-sticky-height) + var(--project-nav-height) + .75rem);
 }
@@ -1155,7 +1333,10 @@ button:focus-visible { outline: .18rem solid var(--accent-bright); outline-offse
    destination is named at the size the rest of the strip is read at. Nothing here changes the bar's height, its
    one line, its four regions, the ellipsis, the full accessible name or the position cue. */
 @media (max-width: 46rem) {
-  .project-nav__row { gap: 0 .35rem; }
+  /* The phone keeps the same shape: the token is the target's floor (`2.75rem` on the anchors), the row only
+     pads around it, and the strip is about 53 px at every width. The header is not sticky here, so the strip
+     is the page's only sticky chrome and it still clears the 44 px target floor. */
+  .project-nav__row { gap: 0 .35rem; padding-block: var(--project-nav-row); }
   .project-nav__step { gap: .25rem; }
   .project-nav__arrow { font-size: .92em; }
   .project-nav__position { min-width: 6.5ch; font-size: .92em; }
@@ -1220,4 +1401,27 @@ button:focus-visible { outline: .18rem solid var(--accent-bright); outline-offse
      fits two rows in aggregate and still took three at 320, because the browser's greedy packing does not
      redistribute what the aggregate would allow. .68rem is the largest size that measured two rows there. */
   .hero-pillars li { padding: .3rem .42rem; font-size: .68rem; }
+}
+
+/* ---------------------------------------------------------------- the detail introduction kept its DOM order, 2026-10-16
+
+   A project page's introduction is one column at every width, and its two paragraphs must read in the order the
+   content states them. They did not, above `60rem`. The generic `.page-intro` composition is written earlier in
+   this file (the `@media (min-width: 60rem)` block that gives the title the left column and stacks the context
+   line and the standfirst beside it), and it places the second standfirst paragraph explicitly:
+
+       .page-intro .shell > .lede + .lede { grid-row: 3 }
+
+   The `.project-detail` override that flattens the shell to one column resets its children to `grid-row: auto`,
+   but it sits earlier in source order and carries the same specificity, so the media query above won on the
+   later declaration -- measured, not assumed: at 1440 the second paragraph was computed `grid-row: 3` and the
+   first, left on auto-placement, was pushed below it. The reader saw the runtime paragraph above the paragraph
+   that introduces the product: the two paragraphs of every two-paragraph project introduction were swapped on
+   desktop, and in the right order below `60rem`, where the query does not match.
+
+   The reset is repeated here, after every other rule in the file, so the single-column page owns its own order
+   at every width. `grid-column` is repeated for the same reason: the query also assigns column 2. Nothing else
+   changes -- the rows are `auto`, and the shell's own `row-gap` is still the space between the paragraphs. */
+@media (min-width: 60rem) {
+  .project-detail .page-intro > .shell > .lede { grid-column: 1; grid-row: auto; }
 }
