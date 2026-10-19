@@ -683,20 +683,17 @@ button:focus-visible { outline: .18rem solid var(--accent-bright); outline-offse
    border -- the career rows above already own that rhythm -- and `.plain-list` is not reused because it has no
    rule of its own and would publish default bullets under a section heading. */
 .about-facts, .reference-list { display: grid; gap: .45rem; margin: 0; padding: 0; list-style: none; }
-.about-facts li, .reference-list li { color: var(--ink-soft); }
-/* NAME LEFT, ORGANIZATION RIGHT (Home A2 final refactor, 2026-10-02). The row is one flex line, not a grid and
-   not two columns of references: the whole block is still a single list of four rows at every width, and the
-   organization is simply pushed to the right margin so the two facts can be read as a pair rather than as one
-   em-dash string. `flex-wrap` is what keeps a narrow viewport from overflowing -- below the two facts' combined
-   width the organization drops under the name and stays readable instead of being clipped or ellipsised -- and
-   `gap` is what stops the wrapped pair from touching. `rem` rather than `em` for the wrap gap, because the
-   block's own type size is the label size and the gap between two labels is a layout value. */
-.reference-list li {
-  display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: .1rem 1.5rem;
-  color: var(--ink);
-}
-.reference-name { font-weight: 660; }
-.reference-org { color: var(--muted); font-weight: 620; }
+.about-facts li { color: var(--ink-soft); }
+/* ONE FACT PER ROW, AND THAT FACT IS AN ORGANIZATION (references privacy pass, 2026-10-19). The rows used to pair
+   a referee's name with the organization beside it, as two spans pushed to the two margins; the block names the
+   organizations alone now, so the pair is gone with the names, the row is a single label, and the label keeps the
+   emphasis the name had. Nothing here reserves a column or a width, so the longest label wraps inside the row at
+   any viewport rather than being clipped -- which is the whole of the mobile treatment this list needs. The
+   closing sentence the content states under the list is muted: it is a condition of the offer, not a second
+   list. */
+.reference-list li { color: var(--ink); }
+.reference-label { font-weight: 660; }
+.reference-closing { margin: .8rem 0 0; color: var(--muted); }
 /* The contact page is one sentence and one action. The note is the page's one stable work-context line: a fact a
    reader may want to know before writing, not a call to action, so it is muted and sits under the control. */
 .contact-panel { display: grid; gap: 1rem; }
