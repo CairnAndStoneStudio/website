@@ -1745,3 +1745,16 @@ button:focus-visible { outline: .18rem solid var(--accent-bright); outline-offse
    composition it corrects. Nothing else moved: the rows are `auto`, and the shell's `row-gap` is still the
    space between the paragraphs. The measurements the 2026-10-16 pass recorded still hold, and this pass
    re-measured the order on a two-paragraph project introduction at 1440 and at 390. */
+
+/* Editorial series: identity and continuation sit within the existing reading measure. */
+.series-identity { margin: 0 0 .6rem; color: var(--muted); font-size: var(--step--1); }
+.series-identity a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: .18em; }
+.series-section { margin-block: 3rem; padding-block-start: 1.5rem; border-block-start: 1px solid var(--line-soft); }
+.series-section h2, .series-exploring h2, .series-exploring h3 { font-size: var(--step-0); }
+.series-exploring { margin-block-start: 1.5rem; }
+.series-exploring p { margin-block: .5rem; }
+.series-topic { font-weight: 600; }
+.series-list { list-style: none; padding: 0; }
+.series-list li { padding-block: 1.25rem; border-block-end: 1px solid var(--line-soft); }
+.series-list h2 { font-size: var(--step-1); margin: 0 0 .5rem; }
+.series-list p { margin-block: .5rem; }
