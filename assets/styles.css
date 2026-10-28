@@ -33,7 +33,15 @@
   --line-ink: rgba(20, 26, 23, .14);
 
   --max: 76rem;
-  --prose: 44rem;
+  /* THE READING MEASURE, 44rem -> 38rem (Journal editorial pass, 2026-10-19). One token, one concept: the line a
+     long-form text is read in. 44rem measured 86-88 characters a line on an article and on the project story,
+     above the 80-character bound of WCAG 1.4.8; 38rem measures 76 characters at 1440 px and is the value the
+     project story already used for its own column. It is a measure, not a universal width: a figure exceeds it
+     by decision (`figure` below), and nothing else in the layout is derived from it. Legal and Privacy read
+     through the same token, so they narrow with it: that is the documented, accepted consequence of having one
+     notion of prose rather than two. The evidence and the arbitration are in `docs/journal-editorial-design-plan.md`
+     §7.3 and §15.2. */
+  --prose: 38rem;
   --gutter: clamp(1.25rem, 4vw, 3.25rem);
   --radius: 3px;
 
@@ -179,6 +187,16 @@ a:hover { color: var(--forest); text-decoration-thickness: .13em; }
 .primary-nav a:hover { color: var(--ink); border-bottom-color: var(--line); }
 .primary-nav a[aria-current="page"] { color: var(--ink); border-bottom-color: var(--accent); }
 
+/* THE SIXTH DESTINATION NARROWED THE GAP BELOW 48rem (article surface, 2026-10-04). The one-row
+   composition has a width budget -- the identity, the gap between the two, the destinations -- and the
+   Journal coming back spent it: measured in Chrome at 737 and 756 px, the brand was squeezed 25 px below
+   its natural width, `brand-name` wrapped onto a second line, and the header grew to 74.34 px while
+   `--header-sticky-height` stayed 4.26rem. The strip pinned at the token would then have sat 6 px behind
+   the header, which is the failure the one-row rule above exists to prevent. The column gap is the one
+   part of the row that can shrink without changing what a reader reads, so it is the part that moves; the
+   row measures 68.19 px again at 737, 756 and 768 px. */
+@media (max-width: 48rem) { .primary-nav { column-gap: .25rem; } }
+
 main { display: block; }
 
 .site-footer {
@@ -229,8 +247,49 @@ p:last-child { margin-bottom: 0; }
   letter-spacing: .15em; text-transform: uppercase;
 }
 .lede { font-size: var(--step-1); line-height: 1.5; color: var(--ink-soft); max-width: var(--prose); }
-.prose { max-width: var(--prose); }
-.prose > * + * { margin-top: 1rem; }
+
+/* ---------------------------------------------------------------- the reading block
+
+   ONE OWNER FOR LONG-FORM PROSE (Journal editorial pass, 2026-10-19). The measure, the rhythm between blocks and
+   the binding of a heading to its own text were stated three times: by `.prose` (44rem, one gap of 1rem for every
+   relation), by the project story (38rem, its own gap, its own `h3`, all scoped to `.project-detail`), and by the
+   article (which inherited `.prose` and added a section size of its own). The prototype measured one owner on
+   sixteen widths, so the scoped copies are deleted rather than kept beside this one -- see
+   `docs/journal-editorial-design-plan.md` §11.1.
+
+   WHAT EACH DECLARATION IS FOR:
+     * the measure is the token, never a number written again here;
+     * the gap between blocks is more than one line box. It was 1rem for every relation, which is under the
+       ~27.9px line box of the body text, so a paragraph, a list and a heading were all separated by the same
+       sub-line space and the page read as one block;
+     * a heading owns the air under it. `:not(h2):not(h3)` on BOTH sides of the sibling combinator is what keeps
+       the two from fighting: the generic rule matches neither a heading nor a heading's own predecessor, so a
+       heading's `margin-block-start` is the only declaration in play and `h2 + *` needs no `!important` to bind
+       a paragraph to the label above it. `:not()` carries its argument's specificity, so a `:not()` on the left
+       side alone would have won the cascade against `.prose > * + h2` and quietly replaced the section gap with
+       the paragraph gap -- which is what the first version of this rule did; */
+     * `h3` is the sub-label voice the project story defined (one step above the body, weight 660, ink, no colour,
+       no rule, no icon) and it is now stated once, so an article and a project label read the same. */
+.prose { max-inline-size: var(--prose); }
+.prose > :not(h2):not(h3) + :not(h2):not(h3) { margin-block-start: clamp(1.1rem, 2.2vw, 1.5rem); }
+.prose > * + h2 { margin-block-start: clamp(2rem, 4vw, 3rem); }
+.prose > * + h3 { margin-block-start: clamp(1.4rem, 2.6vw, 1.85rem); }
+.prose > :is(h2, h3) { margin-block-end: .5rem; }
+.prose > h2 + *, .prose > h3 + * { margin-block-start: .5rem; }
+.prose > h2 { font-size: var(--step-3); }
+.prose > h3 {
+  font-size: var(--step-1); font-weight: 660; letter-spacing: -.012em; line-height: 1.2; color: var(--ink);
+}
+/* The first block of a document keeps no invented air above it: the opening above it states that, and a heading
+   that opens a document is not a section of one. */
+.prose > :first-child { margin-block-start: 0; }
+/* NOTHING SCROLLED TO MAY LAND UNDER THE STICKY CHROME (WCAG 2.2 Focus Not Obscured). Every heading now carries
+   a deterministic anchor -- the Markdown renderer emits one, on every page -- so the offset is stated once for
+   every heading in the document rather than added per route. A page with more chrome than the header (the
+   project page's sticky strip) states its own, larger offset and wins on specificity; this rule is the floor. */
+:where(main) :is(h2, h3)[id] {
+  scroll-margin-block-start: calc(var(--header-sticky-height) + .75rem);
+}
 
 /* A section header sits on the grid's left third; its content occupies the rest. */
 .section-head { max-width: 34rem; margin-bottom: clamp(1.75rem, 3.5vw, 2.75rem); }
@@ -438,7 +497,11 @@ p:last-child { margin-bottom: 0; }
    level and also made a card holding one sentence stand as tall as the illustrated card beside it. That
    is the "this card's image failed to load" reading, arriving from the layout rather than from a
    placeholder. The rows are packed at the top, so the height a card does not need falls below its own
-   text instead of inside it. */
+   text instead of inside it.
+
+/* THE JOURNAL'S INDEX IS NOT THIS LIST ANY MORE (journal editorial pass, 2026-10-19). The dated list is
+   `.journal-index` further down: one row per article, a date beside its title, no card. It shared these seven
+   declarations while the index was a project-card list; what is left here is the project list alone. */
 .project-list { display: grid; grid-template-columns: minmax(0, 1fr); align-items: start; gap: clamp(1rem, 3vw, 2.5rem); margin: 0; padding: 0; list-style: none; }
 
 .project-card { min-width: 0; }
@@ -504,6 +567,232 @@ p:last-child { margin-bottom: 0; }
   padding: .2rem .55rem; background: var(--stone-soft); border-radius: 999px;
   color: var(--muted); font-size: .74rem; font-weight: 620;
 }
+
+/* ---------------------------------------------------------------- the journal
+
+   B LEGERE, IN THE SITE'S OWN VOCABULARY (journal editorial pass, 2026-10-19). The direction the owner chose
+   at GATE 0 is four composition ideas on top of the identity this file already states: a reading container
+   that can be wider than its text, one way for a block to ask for that width, a hairline above every section
+   after the first, and an article foot on its own surface. Nothing below invents a colour, a type step, a
+   font, a breakpoint or a container query, and no rule counts blocks, sections or paragraphs.
+
+   WHAT WAS HERE BEFORE. The index reused the project card (`.card.card--text`) and the article was the site's
+   stacked opening followed by `.article-body > .detail-content.prose`. Both are replaced: the card was a
+   list of one card, and the article's section size lived in a rule scoped to a selector that no longer
+   exists. `.card` itself is untouched -- project cards do not move. */
+
+/* ---- 1. the reading container -------------------------------------------
+   THREE TRACKS: margin, measure, margin. The side tracks are `1fr`, so they take whatever the window gives and
+   collapse to zero when it gives nothing -- that is what replaces a breakpoint, and it is why this sheet
+   needs no media query for the Journal. The middle track is non-flexible, so it is maximised before the
+   flexible tracks expand: at 1216 px the column is 608 px (the measure), and below that the column is the
+   container. Measured at sixteen widths in the prototypes; `docs/journal-editorial-design-plan.md` §7.3.
+
+   `.reading.prose` states `max-inline-size: none` because `.prose` caps itself at the measure and this
+   container must be free to be wider: the figure rule below is the reason. The measure is stated once, as
+   the token, in both places -- this is one notion of prose with one layout, not two. */
+.reading {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, var(--prose)) minmax(0, 1fr);
+}
+.reading > * { grid-column: 2; min-inline-size: 0; }
+.reading.prose { max-inline-size: none; }
+
+/* ---- 2. the one width device --------------------------------------------
+   A figure takes the container; its caption keeps the reading measure and the text column's left edge, so a
+   wide figure never produces a wide line of text. There is no wide-figure constant and no breakpoint: at a
+   width where the container equals the column, the two are the same box and the rule is inert. */
+.reading > .figure { grid-column: 1 / -1; }
+.reading > .figure > figcaption {
+  max-inline-size: var(--prose);
+  margin-inline-start: max(0px, calc((100% - var(--prose)) / 2));
+}
+.figure { margin: 0; }
+.figure img {
+  display: block; inline-size: 100%; block-size: auto;
+  border: 1px solid var(--line-soft); border-radius: var(--radius); background: var(--paper);
+}
+.figure figcaption {
+  margin-block-start: .55rem; color: var(--muted);
+  font-size: var(--step--1); line-height: 1.45;
+}
+
+/* ---- 3. the progression -------------------------------------------------
+   EVERY SECTION AFTER THE FIRST IS DELIMITED BY THE SITE'S OWN HAIRLINE, at the width of the text column. It
+   is the only device that carries the progression at every width, including on a phone, and it costs 21 to
+   25 px per section (measured). It is also how a piece can close without the renderer guessing a close: the
+   author leaves the last heading unnumbered, and the rule separates it exactly as it separates the steps.
+
+   `:not(:first-of-type)` IS ON THE DOCUMENT, NOT ON THE CONTAINER, and that is deliberate: the first `##`
+   follows the article's head, whose own rule sits directly above it, so a second rule there would be two
+   lines for one break. */
+.reading > h2:not(:first-of-type) {
+  border-block-start: 1px solid var(--line-soft);
+  padding-block-start: clamp(1.1rem, 2.2vw, 1.5rem);
+}
+/* THE DOCUMENT'S OWN SECTION STEP. An article's title is `--step-4` (see `article-head`), so its sections take
+   the middle level `--step-2` -- the size a project page's sections already use. This is a relation between
+   the article's title and its sections, not a second prose hierarchy: `.prose` owns the measure, the rhythm
+   and the sub-label, and this one declaration only names the step a section of an article is set at.
+   `.reading.prose` rather than `.reading`: the foot is a `.reading` too, and it has no headings to size. */
+.reading.prose > h2 { font-size: var(--step-2); }
+/* THE AUTHORED ORDINAL IS A LABEL, NOT THE TITLE. `.58em` of its heading, muted, tabular: it scales with the
+   heading at every width and no counter is involved. The heading's text stays exactly what the author wrote. */
+.step {
+  color: var(--muted); font-variant-numeric: tabular-nums;
+  font-size: .58em; font-weight: 700; letter-spacing: .06em;
+  margin-inline-end: .5em;
+}
+
+/* ---- 4. the opening -----------------------------------------------------
+   Context line, title, standfirst, then the rule that starts the piece. The title is NOT capped in `ch`: it
+   shares the reading column, so a short title stays short and a long one wraps inside the same measure as
+   the text it introduces. `text-wrap: balance` evens the lines out of whatever the author wrote, which is the
+   job a `ch` cap only pretended to do. Both wrapping properties are progressive: a browser that does not
+   know them wraps as before. */
+.article-head {
+  display: grid; gap: clamp(.55rem, 1.3vw, .85rem);
+  padding-block-end: clamp(1.5rem, 3vw, 2.25rem);
+  border-block-end: 1px solid var(--line-soft);
+}
+/* THE TITLE'S OWN SIZE IS THE SHARED ONE: the rule that states it is beside `page-intro--stack`, where every
+   page title that speaks in one voice is sized, and it names `.article-head` too rather than writing the same
+   `--step-4` here. What is local is the wrapping: balanced lines at any title length, and a standfirst that
+   avoids a one-word last line. Both are progressive. */
+.article-head .lede { margin: 0; }
+.article-head > p { text-wrap: pretty; }
+/* THE SIZE IS `--step-4`, THE WRAPPING IS BALANCED. An article's title is not capped in `ch` (it shares the
+   reading column), so `text-wrap: balance` is what keeps a long title from being a stack of one-word lines --
+   the same reason `.journal-lead-title` and `.reading > h2` have it. The index's entry titles take it too. */
+.article-head h1 { text-wrap: balance; }
+.entry-title { text-wrap: balance; }
+.reading > h2 { text-wrap: balance; }
+.reading > p { text-wrap: pretty; }
+
+/* ---- 5. the one moment of voice -----------------------------------------
+   No box, no colour, no rule, no icon. The serif and the air do it -- and the serif is a token this file has
+   declared since the beginning and never used. */
+.key-idea {
+  margin: 0; color: var(--ink);
+  font-family: var(--serif); font-size: var(--step-2); line-height: 1.35; letter-spacing: -.012em;
+}
+.key-idea p { margin: 0; }
+
+/* ---- 6. code ------------------------------------------------------------
+   LITERAL, ESCAPED, AND SCROLLED IN ITS OWN BOX. No syntax highlighting and no script: the site has neither
+   and does not need them to show a mechanism. `overflow-x: auto` is on the block, so a 200-character line
+   scrolls inside the code rather than widening the page. The declared language is recorded on the element and
+   nothing reads it yet -- that is a fact about the content, not an abstraction waiting to be used. */
+.article-code {
+  margin: 0; padding: .85rem 1rem;
+  background: var(--paper); border: 1px solid var(--line-soft); border-radius: var(--radius);
+  overflow-x: auto;
+  font-family: var(--mono); font-size: var(--step--1); line-height: 1.55;
+  tab-size: 2;
+}
+.article-code code { font: inherit; white-space: pre; }
+
+/* ---- 7. the end ---------------------------------------------------------
+   THE FOOT CHANGES SURFACE. `--paper` and a top hairline make the end of the reading a register of its own,
+   which is what tells a reader the piece has stopped rather than paused; measured, it changes no dimension
+   (942 px with and without it at 1440). The tags, the two neighbours, the way back and the project it
+   explains are one small block, `flex-wrap`-ed rather than broken at a width. */
+.article-end { background: var(--paper); border-block-start: 1px solid var(--line-soft); }
+.article-foot { display: grid; gap: clamp(.9rem, 2vw, 1.3rem); }
+.article-foot .card-tags { margin: 0; }
+/* THE NEIGHBOURS SHARE A ROW WHEN BOTH EXIST. `13rem` is the smallest a titled neighbour is worth reading at --
+   a `Newer`/`Older` label over one line of title -- and it is a THIRD flexible base on purpose, not a
+   near-duplicate of the other two: it measures a label-plus-title cell, where the Journal's other bases measure
+   a dated body (`20rem`) and a cover column (`22rem`). Below it the two links stack, which is what a phone
+   shows; a neighbour that does not exist is not emitted at all, so the row has one link at either end. */
+.foot-nav { display: flex; flex-wrap: wrap; gap: .75rem 2rem; }
+.foot-nav a {
+  display: grid; gap: .12rem; flex: 1 1 13rem; min-width: 0;
+  color: var(--ink); text-decoration: none;
+}
+.foot-nav a:hover .foot-title { color: var(--accent); }
+.foot-label {
+  color: var(--muted); font-size: var(--step--1); font-weight: 620;
+  letter-spacing: .05em; text-transform: uppercase;
+}
+.foot-title { font-size: var(--step-0); font-weight: 640; }
+.foot-older { text-align: end; }
+.foot-back { margin: 0; font-size: var(--step--1); }
+.foot-back a { color: var(--accent); font-weight: 620; text-decoration: none; }
+.article-project { margin: 0; color: var(--muted); font-size: var(--step--1); }
+.article-project a { color: var(--accent); }
+
+/* ---- 8. the index: a cover, then the list -------------------------------
+   THE COVER IS A BAND, NOT A CARD. `--paper`, a hairline above and below, the newest article's date, title at
+   `--step-3` (the largest text on the index), its standfirst, the projects it explains, and its `primary`
+   image when it declares one -- and nothing when it does not: no reserved box, no placeholder, no height.
+
+   TWO CHILDREN, ONE ROW WHEN THERE IS ROOM FOR TWO COMFORTABLE COLUMNS. `22rem` is the smallest a cover text
+   column is worth composing at; below it the figure stacks under the text. Measured fold: two columns at
+   820 px of container, one at 768 -- arithmetic 792 px -- so the value is a column minimum, not a device.
+
+   THE COVER TEXT KEEPS THE READING MEASURE WITH OR WITHOUT A PICTURE (`max-inline-size` on
+   `.journal-lead-text`).
+   Without it the text takes the whole band when the article declares no cover -- measured 1216 px at 1440, the
+   title in two lines and half the band empty -- and 608 px when it does. The declaration is inert under 608 px,
+   so it costs no query and no breakpoint, and no height is reserved for an absent image: the band measures its
+   content in both cases. */
+.article-lead-band {
+  background: var(--paper);
+  border-block: 1px solid var(--line-soft);
+  padding-block: clamp(1.5rem, 4vw, 2.75rem);
+}
+/* THE COVER ROW IS `.journal-lead`, NOT `.lead`. `lead` is the class the Privacy page already puts on its
+   introduction paragraph (`<p class="lead prose">`), and a flex container there would have been a collision
+   nothing tests. The Journal names its own row. */
+.journal-lead { display: flex; flex-wrap: wrap; gap: clamp(1.25rem, 3vw, 2.5rem); align-items: flex-start; }
+.journal-lead > * { flex: 1 1 22rem; min-width: 0; }
+.journal-lead-text { display: grid; gap: .55rem; max-inline-size: var(--prose); }
+.journal-lead-title { margin: 0; font-size: var(--step-3); letter-spacing: -.028em; line-height: 1.1; text-wrap: balance; }
+.journal-lead-title a { color: var(--ink); text-decoration: none; }
+.journal-lead-title a:hover { color: var(--accent); }
+.journal-lead-summary { margin: 0; color: var(--ink-soft); max-inline-size: var(--prose); }
+.journal-lead-facts { margin: 0; color: var(--muted); font-size: var(--step--1); }
+.journal-lead-figure { margin: 0; }
+.journal-lead-figure img {
+  display: block; inline-size: 100%; block-size: auto;
+  border: 1px solid var(--line-soft); border-radius: var(--radius);
+}
+
+/* THE DATED LIST. The date shares the row with the title and wraps above it when the body would be narrower
+   than `20rem` -- the same intrinsic fallback as the cover, and the same reason. Measured fold: the date
+   shares the row at 440 px and wraps at 414, arithmetic 438. ```
+   An empty list keeps no gap: with one article there is nothing to list, and the closing line must not sit a
+   list's distance below a band. */
+.journal-index { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
+.entry {
+  display: flex; flex-wrap: wrap; align-items: baseline;
+  gap: .15rem clamp(.9rem, 2vw, 1.5rem);
+  padding-block: clamp(.9rem, 2vw, 1.15rem);
+  border-block-start: 1px solid var(--line-soft);
+}
+.entry:first-child { border-block-start: 0; padding-block-start: 0; }
+.entry-date {
+  margin: 0; color: var(--muted); font-size: var(--step--1); font-weight: 620;
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+  flex: 0 0 auto;
+}
+.entry-body { min-width: 0; flex: 1 1 20rem; }
+.entry-title { margin: 0; font-size: var(--step-1); }
+.entry-title a { color: var(--ink); text-decoration: none; }
+.entry-title a:hover { color: var(--accent); }
+.journal-index:empty + .closing-actions { margin-block-start: 0; }
+
+/* "Writing about <project>" on a project page: a list of article titles, each opening the article. It is
+   its own block rather than a `.detail-section` because it exists only when an article names the project
+   -- it is content-driven like the media slot, not part of the fixed project composition -- so it carries
+   its own rhythm instead of borrowing the two-column section grid. */
+.related-writing { margin-top: clamp(1.5rem, 4vw, 2.5rem); }
+.related-writing h2 { font-size: var(--step-1); }
+.related-writing ul { display: grid; gap: .5rem; margin: 1rem 0 0; padding: 0; list-style: none; }
+.related-writing a { color: var(--ink); }
+.related-writing a:hover { color: var(--accent); }
+.related-writing time { margin-left: .5rem; color: var(--muted); font-size: var(--step--1); }
 
 /* ---------------------------------------------------------------- the project row
    ONE PROJECT PER ROW, and how a row is laid out is decided by whether the project has real media. That is
@@ -722,11 +1011,63 @@ button:focus-visible { outline: .18rem solid var(--accent-bright); outline-offse
      context line, then the standfirst's one paragraph or its two. Each shares the measure below, so the
      second paragraph lines up with the first rather than running the shell's width. */
   .page-intro .shell > .detail-context { grid-column: 2; grid-row: 1; align-self: end; }
-  .page-intro .shell > .lede { grid-column: 2; max-width: 38rem; }
+  .page-intro .shell > .lede { grid-column: 2; max-width: var(--prose); }
   .page-intro .shell > .lede:first-of-type { grid-row: 2; align-self: start; }
   .page-intro .shell > .lede + .lede { grid-row: 3; }
   .page-intro .shell > :not(.eyebrow):not(h1):not(.lede):not(.detail-context) { grid-column: 1 / -1; }
 }
+
+/* ---------------------------------------------------------------- a stacked opening, 2026-10-19
+
+   THE TWO-COLUMN OPENING ABOVE IS FOR A PAGE THAT ANNOUNCES ITSELF BESIDE THE THING IT ANNOUNCES; A PAGE
+   THAT SPEAKS IN ONE VOICE OPENS IN ONE COLUMN, IN THE ORDER IT IS READ. A project page has had that stack
+   since the 2026-10-06 detail pass; an article is the same kind of page -- a title, the one line that says
+   what this is and when, the standfirst, then a reading column -- and so is the Journal's own index, whose
+   title and one sentence introduce a list. All three wear this modifier, so the composition is stated once
+   rather than once per route, and nothing below names an article, a project or a page.
+
+   WHAT IT FIXES, MEASURED ON THE ARTICLE AS IT WAS: the generic intro put the title in the left 5fr column
+   of an 11fr grid -- 520px of a 1216px shell at 1440 -- while the global `h1` rule set it at `--step-5`
+   (76px there). A 56-character title in a 520px column at 76px is five lines, the tallest block on the page
+   by a wide margin, and the standfirst sat in the opposite column as a paragraph of its own. The title takes
+   `--step-4` now -- the size the Home hero, the Expertise title, the Projects title and the About opening
+   already use -- and the column is the shell's, so both causes of the oversized title are gone.
+
+   THE MEASURE IS `30ch` AND IT IS A TITLE'S, NOT THE READING COLUMN'S. It is the project page's own cap: a
+   long name wraps inside a measure a title can be read in instead of owning the viewport, and a short one
+   does not stretch. The reading column under it stays `.prose` (or its own 38rem), so the title is wider
+   than the body it introduces -- the proportion the Home and every project page already have. */
+.page-intro--stack { padding-block: clamp(1.5rem, 3vw, 2.25rem) clamp(1.25rem, 2.4vw, 1.75rem); }
+/* One column at every width. The row gap is what puts air between the title and the line under it: the
+   global `h1` leading is a correction for a very large heading, and it leaves the title touching its
+   standfirst once the two are stacked. */
+.page-intro--stack > .shell {
+  display: grid; grid-template-columns: minmax(0, 1fr); row-gap: clamp(.5rem, 1.2vw, .85rem);
+}
+/* EVERY BLOCK OF THE OPENING, NAMED RATHER THAN CAUGHT BY `> *`. The two-column composition above assigns
+   a column to each of these four children, and a `> *` reset is one class weaker than the assignments it
+   has to undo: with it, the context line stayed in column 2 -- a second, implicit column in a one-column
+   grid -- and the standfirst's second paragraph stayed in row 3, above the first. Naming the children the
+   composition knows is what makes the override independent of which rule came last. */
+.page-intro--stack > .shell > .eyebrow,
+.page-intro--stack > .shell > h1,
+.page-intro--stack > .shell > .lede,
+.page-intro--stack > .shell > .lede + .lede,
+.page-intro--stack > .shell > .detail-context { grid-column: 1; grid-row: auto; }
+/* `--step-4` is the size the Home hero and the Expertise title already take, for the reason recorded there:
+   `--step-5` is a size for a page that has nothing else to say, and on a detail page it ate up to 34% of the
+   first screen. The measure is capped so a long name wraps instead of owning the viewport.
+
+   THE SIZE IS STATED ONCE FOR EVERY PAGE TITLE THAT SPEAKS IN ONE VOICE, and an article's title is one of
+   them (2026-10-19): the article's opening is a `.article-head` inside the reading container rather than a
+   stacked page intro, and it takes the same step from this rule instead of writing `--step-4` again. What
+   stays local to the stacked intro is its `30ch` measure: an article title is deliberately NOT capped, because
+   it shares the reading column, so a short title stays short and a long one wraps inside the measure of the
+   text it introduces -- which is what `text-wrap: balance` evens out with no constant at all. */
+:is(.page-intro--stack, .article-head) h1 {
+  font-size: var(--step-4); letter-spacing: -.028em; line-height: 1.1;
+}
+.page-intro--stack h1 { max-width: 30ch; }
 
 /* THE PROJECT'S VISUAL, WHETHER IT IS THE COMPACT ONE ABOVE THE STORY OR THE PLATE BELOW IT (final UX
    adjustment pass, 2026-10-06). Both are one `figure` in the same band, and the wrapper declares nothing
@@ -751,9 +1092,18 @@ button:focus-visible { outline: .18rem solid var(--accent-bright); outline-offse
   .site-header > .shell { flex-direction: column; align-items: flex-start; gap: .1rem; padding-block: .7rem .5rem; }
   .site-header { position: static; }
   .primary-nav { width: 100%; }
-  /* The nav scrolls rather than wrapping into four lines on a phone. */
-  .primary-nav { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
-  .primary-nav::-webkit-scrollbar { display: none; }
+  /* THE NAVIGATION WRAPS INSTEAD OF HIDING ITS LAST DESTINATION (2026-10-26). It used to be a one-row strip
+     with `overflow-x: auto` and its scrollbar suppressed, so that a phone never showed a second row of links.
+     Measured in Edge at 320 px: the six destinations need 319 px (299 px of labels plus five 4 px gaps) and the
+     shell offers 280 px, so the clip fell inside `Contact` — 13 px of a 52 px label visible, no scrollbar, no
+     fade, nothing on screen saying a sixth destination existed. `overflowX` on the document was 0 the whole
+     time, which is why the defect survived the earlier capture passes: the overflow was inside the navigation.
+     Wrapping costs one extra row below ~359 px and nothing above it (measured: one row at 360, 390, 414, 500,
+     716, 736 and every wider width). The compact header is `position: static` with `--header-sticky-height: 0`,
+     so a taller header has no sticky consequence here; the row a reader gains is 40 px of the same links, and
+     `overflow: visible` means a label that outgrows the row shows the page overflowing instead of hiding a
+     destination silently. This is the shared header's rule, not a rule for one page. */
+  .primary-nav { flex-wrap: wrap; column-gap: .25rem; row-gap: .15rem; }
   .primary-nav a { white-space: nowrap; }
   .hero { padding-block: 1.75rem var(--section); }
   /* The Home hero's own title, one step down on a phone (2026-10-01). `--step-4` renders at 33.4px at 390px wide,
@@ -1063,27 +1413,22 @@ button:focus-visible { outline: .18rem solid var(--accent-bright); outline-offse
    than a second grid template. The old layout's heading column existed to align four schema rows; with two
    prose sections it only pushed the text right. The shared grid stays for the long-form pages that want it. */
 
-.project-detail .page-intro { padding-block: clamp(1.5rem, 3vw, 2.25rem) clamp(1.25rem, 2.4vw, 1.75rem); }
-/* The hero had no bottom padding (final UX adjustment pass, 2026-10-06) because the compact visual's band
-   followed it directly and the band supplied the gap. The strip is between the two again, so the hero needs its
-   own bottom room: it separates the standfirst from the navigation, and the strip's own surface then gives the
-   navigation its separation from "What I did". Slightly less than the top padding (owner, 2026-10-16, second
-   note): the strip is 53 px of chrome and the gap above it does not have to match the one above the title. */
-/* One column at every width: the hero used to put the title on the left and the argument beside it, and the
-   reader met the summary and the card in the same glance. The story is a stack, so the grid is only the
-   spacing between the three lines. */
-.project-detail .page-intro > .shell {
-  display: grid; grid-template-columns: minmax(0, 1fr); row-gap: clamp(.5rem, 1.2vw, .85rem);
-}
-.project-detail .page-intro > .shell > * { grid-column: 1; grid-row: auto; }
-/* `--step-4` is the size the Home hero and the Expertise title already take, for the reason recorded there:
-   `--step-5` is a size for a page that has nothing else to say, and on a detail page it ate up to 34% of
-   the first screen. The measure is capped so a long project name wraps instead of owning the viewport. */
-.project-detail h1 { max-width: 30ch; font-size: var(--step-4); letter-spacing: -.028em; line-height: 1.1; }
-.project-detail .detail-context {
+/* THE INTRODUCTION AND THE TITLE ARE STATED ONCE, FOR EVERY PAGE THAT SPEAKS IN ONE VOICE. `.page-intro`'s
+   two-column composition is unset by `page-intro--stack`, beside the composition it corrects; what stays
+   here is what only a project has. The introduction's own bottom room is part of that block's padding: the
+   strip is between the introduction and the story, and that gap is what separates the standfirst from the
+   navigation. */
+   THE CONTEXT LINE IS ONE COMPONENT, STATED ONCE (2026-10-19). `Organization · period` on a project page,
+   `Journal · 4 Oct 2026` on an article: one muted, small, tabular line under the title, with an undecorated
+   accent link. It was scoped to `.project-detail` until the article needed it, and the article would otherwise
+   have printed its own context as body text with an underlined default link (measured in the production
+   capture). The rule is global now and the scoped copy is deleted rather than duplicated. */
+.detail-context {
   margin: 0; color: var(--muted); font-size: var(--step--1); font-weight: 620;
   font-variant-numeric: tabular-nums;
 }
+.detail-context a { color: var(--accent); text-decoration: none; }
+.detail-context a:hover { text-decoration: underline; }
 .project-detail .detail-summary { margin: 0; }
 .project-detail .band > .shell { display: grid; gap: clamp(1.75rem, 4vw, 2.75rem); }
 /* THE VISUAL'S OWN BAND IS NOT THE STORY'S BAND (final UX adjustment pass, 2026-10-06). The rule above lays
@@ -1091,48 +1436,35 @@ button:focus-visible { outline: .18rem solid var(--accent-bright); outline-offse
    the shell's plain block behaviour. The `:not()` is what keeps the two from depending on source order. */
 .project-detail .band--media > .shell { display: block; gap: 0; }
 .project-detail .detail-section { display: block; }
-/* ONE MEASURE FOR THE WHOLE STORY. The summary takes `38rem` from the shared intro rule, and the work
-   paragraph and the proof took `--prose` (44rem) until the first measurement of this composition reported
-   lines of 86-88 characters against the 48-82 the audit had measured before it. 38rem puts every block of
-   the page on the same column at 76-79 characters a line, and a reader who is reading one column should not
-   have to discover that its width changes twice on the way down. */
-.project-detail .detail-section > .detail-content,
+/* ONE MEASURE FOR THE WHOLE STORY, AND IT IS THE SHARED ONE. The work paragraph and the proof used to take
+   `--prose` (44rem) while the summary took `38rem`, so a reader discovered that the column changed width twice
+   on the way down a page whose blocks are all read the same way. The story's reading block is `.prose` now and
+   carries the measure itself (see the reading block above); what is left here is the proof, which is a list of
+   labels and sentences rather than prose, and takes the same measure by name instead of inventing a second one. */
 .project-detail .proof-list,
-.project-detail .proof-detail { max-width: 38rem; }
+.project-detail .proof-detail { max-width: var(--prose); }
 /* The heading comes up one step from the record layout's `--step-1`. Measured against a `--step-4` title it
    is the middle level the page was missing: the audit found a 3.5x jump from title to section heading while
    three near-identical micro-labels competed at the bottom. */
 .project-detail .detail-section > h2 { margin-bottom: .85rem; font-size: var(--step-2); }
 
-/* ---------------------------------------------------------------- the story's own rhythm
+/* ---------------------------------------------------------------- the story's subheadings
 
    LABELLED CONTRIBUTIONS, AND WHY THE STORY HAS SUBHEADINGS (editorial pass, 2026-10-06). A project's body
    used to be one paragraph carrying every contribution it had -- four or five sentences, one block, no
    anchor -- which is the shape scanning handles worst. The eye-tracking evidence for the *layer-cake*
    pattern is that readers fixate headings and subheadings and read the body between them only where the
    subheadings are visually distinct, predictable, and clearly bound to their own text; a page of unbroken
-   prose gets the F-pattern instead, which skips everything that is not at the start of a line. So the recipe
-   is three to five `###` labels per project, and this block is what makes them work:
+   prose gets the F-pattern instead, which skips everything that is not at the start of a line. The recipe is
+   three to five `###` labels per project and is unchanged.
 
-     * the label is one type step above the body and nothing else -- same typeface, `--ink`, no colour, no
-       rule, no icon, no uppercase. NN/g's own warning is the reason: a subhead that shouts reads as an
-       advertisement and is skipped;
-     * there is clearly more space above a label than below it, which is what binds it to the paragraphs it
-       introduces rather than to the block above it;
-     * paragraphs are separated by more than one line height. The shared `.prose` gap is `1rem` and the line
-       box is about `1.7rem`, so consecutive paragraphs read as one block -- the wall of text, measured. */
-.project-detail .detail-section--story > .detail-content.prose > * + * {
-  margin-top: clamp(1.15rem, 2.2vw, 1.5rem);
-}
-.project-detail .detail-section--story > .detail-content.prose h3 {
-  /* The space above a label is the whole mechanism, so it is the number that scales with the viewport: on a
-     phone a label costs a line **plus** its leading, and five of them at the desktop value added 320 px to
-     the page -- measured, and the reason the phone value is the tight end of this clamp. */
-  margin: clamp(1.4rem, 3vw, 2.1rem) 0 .35rem;
-  font-size: var(--step-1); font-weight: 660; letter-spacing: -.012em; line-height: 1.2; color: var(--ink);
-}
-.project-detail .detail-section--story > .detail-content.prose > h3:first-child { margin-top: 0; }
-.project-detail .detail-section--story > .detail-content.prose > h3 + * { margin-top: .35rem; }
+   THE FOUR RULES THAT IMPLEMENTED IT ARE GONE (Journal editorial pass, 2026-10-19), and their decisions moved
+   into the reading block rather than being restated here: `.prose` now owns the sub-label's size, weight,
+   colour and letter-spacing, the air above a label (more than below it, which is what binds it to its own
+   paragraphs), the tighter gap under a label, and paragraphs separated by more than one line height. The
+   scoped copies said exactly the same thing at `1.15rem`/`.35rem` instead of the shared values, so keeping
+   them would have been two owners of one decision. Nothing about the project page's rendering changes except
+   1.6 px between paragraphs at 1440 and 0.8 px at 390, which is the prototype's measured delta. */
 
 /* ---------------------------------------------------------------- the supporting column
 
@@ -1155,7 +1487,7 @@ button:focus-visible { outline: .18rem solid var(--accent-bright); outline-offse
    Haselgrove direction) is that both too long and too short read worse. */
 @media (min-width: 68rem) {
   .project-detail .band:not(.band--media) > .shell {
-    grid-template-columns: minmax(0, 38rem) minmax(0, 38rem);
+    grid-template-columns: minmax(0, var(--prose)) minmax(0, var(--prose));
     justify-content: space-between;
     align-items: start;
     column-gap: clamp(2rem, 4vw, 4rem);
@@ -1171,7 +1503,7 @@ button:focus-visible { outline: .18rem solid var(--accent-bright); outline-offse
   .project-detail .band > .shell > .detail-contact { grid-column: 1; }
 }
 .project-detail .proof-list {
-  display: grid; gap: 1.1rem; max-width: 38rem; margin: 0; padding: 0; list-style: none;
+  display: grid; gap: 1.1rem; margin: 0; padding: 0; list-style: none;
 }
 .project-detail .proof-item { display: grid; gap: .2rem; }
 /* The capability label is a label a reader can read: `--step-0`, sentence case, ink. It was 11.8px uppercase
@@ -1181,7 +1513,7 @@ button:focus-visible { outline: .18rem solid var(--accent-bright); outline-offse
 .project-detail .proof-label {
   font-size: var(--step-0); font-weight: 680; letter-spacing: 0; text-transform: none; color: var(--ink);
 }
-.project-detail .proof-detail { max-width: 38rem; margin: 0; color: var(--ink-soft); }
+.project-detail .proof-detail { margin: 0; color: var(--ink-soft); }
 /* Technologies are metadata, so they read as the page's footnote: one muted line, a hairline above it that
    the site's other list separators already use, and no card, no heading and no gap that implies a section. */
 .project-detail .detail-tech {
@@ -1400,25 +1732,16 @@ button:focus-visible { outline: .18rem solid var(--accent-bright); outline-offse
   .hero-pillars li { padding: .3rem .42rem; font-size: .68rem; }
 }
 
-/* ---------------------------------------------------------------- the detail introduction kept its DOM order, 2026-10-16
+/* ---------------------------------------------------------------- the reset at the foot of this file is gone, 2026-10-19
 
-   A project page's introduction is one column at every width, and its two paragraphs must read in the order the
-   content states them. They did not, above `60rem`. The generic `.page-intro` composition is written earlier in
-   this file (the `@media (min-width: 60rem)` block that gives the title the left column and stacks the context
-   line and the standfirst beside it), and it places the second standfirst paragraph explicitly:
+   THE STANDFIRST'S SECOND PARAGRAPH USED TO NEED A RULE AT THE VERY END OF THIS FILE, AND NO LONGER DOES. The
+   2026-10-16 pass found that a project's two-paragraph introduction read in the wrong order above `60rem`: the
+   generic `.page-intro` query places `.lede + .lede` in `grid-row: 3`, that rule is one class stronger than a
+   `> *` reset, and the second paragraph therefore landed above the first on desktop. The fix was repeated
+   here, where it beat everything by source order.
 
-       .page-intro .shell > .lede + .lede { grid-row: 3 }
-
-   The `.project-detail` override that flattens the shell to one column resets its children to `grid-row: auto`,
-   but it sits earlier in source order and carries the same specificity, so the media query above won on the
-   later declaration -- measured, not assumed: at 1440 the second paragraph was computed `grid-row: 3` and the
-   first, left on auto-placement, was pushed below it. The reader saw the runtime paragraph above the paragraph
-   that introduces the product: the two paragraphs of every two-paragraph project introduction were swapped on
-   desktop, and in the right order below `60rem`, where the query does not match.
-
-   The reset is repeated here, after every other rule in the file, so the single-column page owns its own order
-   at every width. `grid-column` is repeated for the same reason: the query also assigns column 2. Nothing else
-   changes -- the rows are `auto`, and the shell's own `row-gap` is still the space between the paragraphs. */
-@media (min-width: 60rem) {
-  .project-detail .page-intro > .shell > .lede { grid-column: 1; grid-row: auto; }
-}
+   `page-intro--stack` names its children instead of catching them with `> *`, so the reset carries the same
+   specificity as the assignment it undoes and lives beside it -- in "a stacked opening", next to the
+   composition it corrects. Nothing else moved: the rows are `auto`, and the shell's `row-gap` is still the
+   space between the paragraphs. The measurements the 2026-10-16 pass recorded still hold, and this pass
+   re-measured the order on a two-paragraph project introduction at 1440 and at 390. */

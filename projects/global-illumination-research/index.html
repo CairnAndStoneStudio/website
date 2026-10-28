@@ -18,11 +18,11 @@
           <img class="brand-mark" src="../../assets/media/logos/cairn-and-stone.svg" alt="" aria-hidden="true" decoding="async">
           <span class="brand-text"><span class="brand-name">Cairn and Stone Studio · Mathieu Lagarde</span><span class="brand-role">Senior Software Engineer / Tech Lead</span></span>
         </a>
-        <nav class="primary-nav" aria-label="Primary navigation"><a href="../../">Home</a><a href="../" aria-current="page">Projects</a><a href="../../expertise/">Expertise</a><a href="../../about/">About</a><a href="../../contact/">Contact</a></nav>
+        <nav class="primary-nav" aria-label="Primary navigation"><a href="../../">Home</a><a href="../" aria-current="page">Projects</a><a href="../../expertise/">Expertise</a><a href="../../journal/">Journal</a><a href="../../about/">About</a><a href="../../contact/">Contact</a></nav>
       </div>
     </header>
     <main id="main"><article class="project-detail">
-        <header class="page-intro"><div class="shell">
+        <header class="page-intro page-intro--stack"><div class="shell">
           <h1>CPU/GPU global illumination research</h1>
           <p class="detail-context">Université Paris-Est Marne-la-Vallée · Nov 2012 – Nov 2014 · global illumination research on CPU and GPU</p>
           <p class="lede detail-summary">A research engineering role at Université Paris-Est Marne-la-Vallée focused on global illumination. I implemented the same rendering approach on CPU and GPU to compare both paths. This work became the foundation for the rendering direction I later continued with DL-Instant.</p>
@@ -36,7 +36,7 @@
           </div>
         </nav>
         <section class="band band--paper band--tight"><div class="shell">
-          <section class="detail-section detail-section--story"><h2>What I did</h2><div class="detail-content prose"><h3>Virtual point lights</h3><p>I implemented virtual point lights in Embree and added the Lightcuts optimisation on top of the VPL method.</p><h3>CPU/GPU pipeline</h3><p>I built the OpenGL rendering engine and the export path that transfers Embree results into it.</p><h3>Shadowing methods</h3><p>The shadowing work covered Shadow Maps, Paraboloid Shadow Maps and Imperfect Shadow Maps.</p></div></section>
+          <section class="detail-section detail-section--story"><h2>What I did</h2><div class="detail-content prose"><h3 id="virtual-point-lights">Virtual point lights</h3><p>I implemented virtual point lights in Embree and added the Lightcuts optimisation on top of the VPL method.</p><h3 id="cpu-gpu-pipeline">CPU/GPU pipeline</h3><p>I built the OpenGL rendering engine and the export path that transfers Embree results into it.</p><h3 id="shadowing-methods">Shadowing methods</h3><p>The shadowing work covered Shadow Maps, Paraboloid Shadow Maps and Imperfect Shadow Maps.</p></div></section>
           
           <section class="detail-section detail-section--proof"><h2>Technical proof</h2><div class="detail-content"><ul class="proof-list"><li class="proof-item"><h3 class="proof-label">GPU programming</h3><p class="proof-detail">The same global illumination approach implemented on both CPU and GPU, with virtual point lights in Embree and rendering in OpenGL.</p></li><li class="proof-item"><h3 class="proof-label">3D math</h3><p class="proof-detail">Virtual point lights, the Lightcuts optimisation built on top of them, and ShadowMap, Paraboloid Shadow Map and Imperfect Shadow Map methods.</p></li></ul></div></section>
           <p class="detail-tech">C++ · Embree · OpenGL / GLSL</p>
