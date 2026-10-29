@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="Content-Security-Policy" content="default-src &#x27;none&#x27;; script-src &#x27;self&#x27;; style-src &#x27;self&#x27;; img-src &#x27;self&#x27;; base-uri &#x27;none&#x27;; form-action &#x27;none&#x27;; object-src &#x27;none&#x27;">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="When an agent writes code faster than I can review it, review has to change. The properties I check, how I test the tests, and what that costs.">
+    <meta name="description" content="How I check code produced by AI agents: define expectations, challenge tests and adapt review to risk.">
     <title>If AI writes the code, what should I review? — Cairn and Stone Studio</title>
     <link rel="canonical" href="https://cairnandstone.studio/journal/if-ai-writes-the-code-what-should-i-review/">
     <link rel="stylesheet" href="../../assets/styles.css">
@@ -21,84 +21,7 @@
         <nav class="primary-nav" aria-label="Primary navigation"><a href="../../">Home</a><a href="../../projects/">Projects</a><a href="../../expertise/">Expertise</a><a href="../" aria-current="page">Journal</a><a href="../../about/">About</a><a href="../../contact/">Contact</a></nav>
       </div>
     </header>
-    <main id="main"><article><div class="shell"><div class="reading prose"><header class="article-head"><p class="series-identity">Series · <a href="../series/engineering-with-ai-agents/">Engineering with AI Agents</a></p><p class="detail-context"><a href="../">Journal</a> · <time datetime="2026-10-28">28 Oct 2026</time></p><h1>If AI writes the code, what should I review?</h1><p class="lede">Agents produce changes faster than I can read them. So I review different things now: the properties, and the checks that are supposed to hold them.</p></header><p>On a good day three agent changes are queued and I have attention for one. An agent writes a diff faster than
-I read it. If I review every line the way I review my own code, I finish one change and the queue grows.</p><p>So I changed what I read, and I moved part of the work somewhere else. I decide in advance which properties
-must hold, and I make the machine run and record the checks that hold them. Then I try to break those checks,
-because an agent that writes the tests writes them with the same assumptions as the code.</p><p>Two findings pushed me there. A green suite meant less than I thought. And a report saying the tests passed is
-not evidence that anything ran.</p><h2 id="a-green-suite-that-proved-less-than-i-thought"><span class="step">1.</span> A green suite that proved less than I thought</h2><p>In October I audited my own validation pipeline and found 335 tests in the product trees that no gate ran. They
-passed when I ran them by hand, and nothing invoked them: the pipeline runs the repository suite, and those two
-suites cover packages it never imports. My pipeline was reporting on a subset I had never counted. Both suites are
-now steps in the pipeline, run before the expensive one, and the steps are one list in one file.</p><p>The same audit turned up the quieter version. A helper script of mine appended a copy of one test to a test
-module on every run. Python keeps the last definition when a method name repeats, so eleven copies of one test
-ran as one, all green. A suite that can silently lose a test is not a suite I can quote. The guard parses every
-test module under the three test roots and looks for a test name defined twice, and it has a check of its own, on
-a source string holding a deliberate duplicate: that is how I know it can still see one.</p><h2 id="what-i-check-now-and-how-i-tried-to-break-it"><span class="step">2.</span> What I check now, and how I tried to break it</h2><p>Most of my work happens before the agent starts: deciding what has to stay true. CASBureau has a screen where a
-person records a decision that stops an agent's work, and two things had to hold. The first: when someone
-provides a reason, the recorded decision keeps their wording. If the field is empty, the server supplies the
-defined fallback. The browser doesn't make one up. The second: the proof that something was recorded appears
-where the decision was taken, with the act, the timestamp and the digest, and survives the repaint that the write
-itself causes. A confirmation living only in the old page would vanish exactly when it became true.</p><p>I did not write those tests line by line. I stated the properties, and I let the agent produce the cases: the
-refusal path where the round trip fails, a blank field, a decision already taken. Statements about what must stay
-true turned into a set of cases I would once have written one at a time.</p><p>But an agent that writes the code and the tests shares its assumptions with both. If it believes the browser
-supplies the reason, the code and the test agree and the suite is green while the property is false. So I stopped
-trusting the count and started attacking it.</p><p>For each property, a small script works through a table of deliberate defects. Each row carries the text to
-replace, the defect to put in its place, and the test that must catch it:</p><pre class="article-code" data-language="python" tabindex="0"><code># label, file, text to replace,
-# the defect, and the test that
-# must catch it
-("the proof loses its timestamp",
- "services/cas.py",
- '"written_at": now(),',
- '"written_at": "",',
- T2_PROOF),</code></pre><p>I ran four of those rows against the tree as it stands, each with its own test: the browser dialog coming back,
-the page writing its own sentence, the reason falling back on the server, and the timestamp cleared. All four
-turned their test red in under a second, and each message named the defect:</p><pre class="article-code" data-language="text" tabindex="0"><code>AssertionError: '' is not true :
-  the answer carries when CAS
-  recorded it
-AssertionError: the page never
-  satisfied !…('#decision-proof')
-  .hidden</code></pre><p>I tried one change that is not a defect too, the same value read through a temporary variable. It stayed green,
-which is also the answer I wanted.</p><p>Now, what that run establishes is narrower than it looks. The dialog and the sentence the page wrote for itself
-were the two faults the work existed to remove, so those checks are still live against the defects they were
-written for. That is regression coverage, and it is a different question from whether a check can catch a way of
-breaking the property nobody has thought of yet. Re-running the known defects does not answer it.</p><p>The part I did not plan taught me more. Chasing one of these mutations, I pointed it at the wrong test, and it
-survived: nothing was wrong with the test, I had aimed it at a neighbouring check. An older mutation of mine ended
-the same way, its two code paths turning out to be the same reading, so the change had never been a defect. A
-surviving mutant is not automatically a weak test, which is why the rule is to go and read it.</p><p>So the script has two guarantees, and they are short. A passage that does not appear exactly once is refused
-rather than applied to its first match: a replacement that hit the wrong line would pass while proving nothing.
-And every file comes back from a byte-for-byte backup even when a step throws, because a run abandoned halfway
-through a mutated tree would be worse than no run at all. The set is small on purpose, one case at a time.</p><p>It also decays. Refactoring after the fact left some scripts naming tests that no longer exist, and one pointing
-at a service module that was renamed, so those rows prove nothing now. The four I re-ran today still turn their
-test red, and I can name the test each one attacks. I do not count the older scripts as current evidence: a
-check whose address is stale is not a check, and a campaign that is itself unchecked is a weakness of this
-method.</p><p>For changes where the risk justifies it, that is the loop I run: I state the property, an agent expands it into
-cases and edge cases, and I spend my own time trying to falsify the result. I do not delegate the decision about
-whether the checks are good enough. How far to go is a judgement, and it depends on what the change can break,
-and on what the pipeline would already catch if it did.</p><h2 id="who-checks-that-the-check-ran"><span class="step">3.</span> Who checks that the check ran</h2><p>An agent's summary is not evidence that anything ran. So the task document names the check it owes before any
-work starts. CASBureau, the local tool I am developing for my own AI-assisted work, is what reads that line and
-runs what it names. The workspace in front of it is still being finished.</p><pre class="article-code" data-language="markdown" tabindex="0"><code>## Validation required
-
-- casllm.tests</code></pre><p>What that line names is a capability, not a command: an agreed name for a check, whose actual command lives in
-the repository configuration, where I can read it and diff it, and where the same name can mean a different
-command in another project. The point of the indirection is that the agent cannot substitute a cheaper check for
-the one the task owes. The runtime starts the command itself and records the call, and when the work claims to be
-done, the check is satisfied by a passing result from that same execution: a failed run is not a passed check.
-Reusing an earlier proof is allowed, but only through the same rules.</p><p>An earlier passing run can be cited, but it has to be named, and it has to still match the revision and the
-command. If there is no result, the task does not move. Reviews follow the same shape: a verdict counts when it
-comes from an actor other than the worker, though that does not make the next reviewer right. And the pass that
-concludes re-runs everything, because a run that covered only what changed is not proof of the whole.</p><h2 id="what-i-still-read"><span class="step">4.</span> What I still read</h2><p>I read the interfaces, because a wrong boundary is expensive and a test rarely names it. I read the algorithms
-where a subtle error survives every example, and the changes that alter behaviour rather than internals. The diff
-of the tests gets a careful pass, because that is where an agent's assumptions are easiest to spot. And I read
-what the change does not cover, which no test will write for me. The effort follows the risk, and the risk is
-mine to judge: renaming a template gets a glance, changing how a task closes gets the full run, an independent
-review, and me reading the state machine on paper.</p><h2 id="what-it-costs-now">What it costs now</h2><p>Asking for more validation is cheap. Running it is not. My pipeline is six steps: the file rules, the shape
-linter, two product test suites, a real end-to-end run, and the main suite. The two product suites cost about
-27 seconds together, against a main suite that holds more than three thousand test methods. The whole run takes
-around 25 minutes on this machine.</p><p>I do not read less because I stopped caring about the code. I read less because the effort moved: from reading
-every line to stating what must stay true, then breaking it to see whether anything notices. What that bought me
-is a suite I can argue with. What it cost me is the clock.</p><p>The bottleneck has moved rather than disappeared. Reading and review still take time on the changes that deserve
-it, and defining and checking the properties is work I now do that I did not do before. But a full validation
-costs around 25 minutes, and that is what now slows some of my working loops down. Making it faster is the next
-problem I have to solve.</p><section class="series-section"><h2>More from <a href="../series/engineering-with-ai-agents/">Engineering with AI Agents</a></h2><div class="series-exploring"><h3>Exploring next</h3><p class="series-topic">The Proof Takes 25 Minutes. Now What?</p><p>Which checks really need to run every time, and which results can be safely reused? I'm exploring how to reduce validation costs without weakening the guarantees.</p></div></section></div></div><section class="band band--tight article-end"><div class="shell"><div class="reading"><aside class="article-foot"><ul class="card-tags"><li>AI-assisted development</li><li>Code review</li><li>Software quality</li><li>Agentic engineering</li><li>CASBureau</li></ul><p class="foot-back"><a href="../">All writing</a></p><p class="article-project">Part of the <a href="../../projects/casbureau/">CASBureau</a> project</p></aside></div></div></section></article></main>
+    <main id="main"><article><div class="shell"><div class="reading prose"><header class="article-head"><p class="series-identity">Series · <a href="../series/engineering-with-ai-agents/">Engineering with AI Agents</a></p><p class="detail-context"><a href="../">Journal</a> · <time datetime="2026-10-28">28 Oct 2026</time></p><h1>If AI writes the code, what should I review?</h1><p class="lede">AI agents can produce code faster than I can review it. I'm experimenting with ways to check their work without relying entirely on line-by-line code review.</p></header><p>I'm looking for other ways to maintain quality, without giving up on understanding what's changing. Part of that means deciding earlier what the software should do and what must remain true, then checking whether the tests actually verify those expectations.</p><p>I start with a specification: the expected behavior, the constraints, and the properties that must hold. I also decide which risks deserve the most attention. An agent can then implement a solution and write tests against those expectations.</p><p>To avoid relying on one agent's reasoning for both the code and its tests, I can give the same specification to a second agent. Before seeing the first agent's code or tests, it works out its own expectations and test cases. Only then does it compare its work with the implementation and existing tests, looking for differences and missing cases. I can also use different models to bring in different approaches, although that doesn't guarantee they won't make the same mistakes.</p><p>In my projects, I also challenge some tests with targeted, automated scenarios. They deliberately introduce defects into the software, then run the tests that are supposed to catch them. If a test still passes, I investigate why. This lets me evaluate some of those checks without having to review every test individually.</p><p>Imagine a program that's supposed to draw a blue square. An agent writes the program and a test to check the result. To challenge that test, an automated scenario changes the program so it draws a red square instead. If the test still passes, it missed the mistake. If it fails because the color changed, at least I know it can catch that specific defect.</p><p>None of this guarantees bug-free software. Agents can share the same wrong assumptions, and tests can miss important cases. I also need to make sure the reported checks actually ran. I still review code and make technical decisions, especially around interfaces, architecture, and critical algorithms. How much review and validation I do depends on the risk.</p><p>Agents let me explore more cases, and I'm trying to make those checks more varied and more reliable. But running them takes time. In my current setup, a full validation run takes around 25 minutes. The next challenge is figuring out how to reduce that cost without weakening the guarantees that matter.</p><section class="series-section"><h2>More from <a href="../series/engineering-with-ai-agents/">Engineering with AI Agents</a></h2><div class="series-exploring"><h3>Exploring next</h3><p class="series-topic">The Proof Takes 25 Minutes. Now What?</p><p>Which checks really need to run every time, and which results can be safely reused? I'm exploring how to reduce validation costs without weakening the guarantees.</p></div></section></div></div><section class="band band--tight article-end"><div class="shell"><div class="reading"><aside class="article-foot"><ul class="card-tags"><li>AI-assisted development</li><li>Code review</li><li>Software quality</li><li>Agentic engineering</li><li>CASBureau</li></ul><p class="foot-back"><a href="../">All writing</a></p><p class="article-project">Part of the <a href="../../projects/casbureau/">CASBureau</a> project</p></aside></div></div></section></article></main>
     <footer class="site-footer"><div class="shell"><p>© 2026 Cairn and Stone Studio — Mathieu Lagarde, Senior Software Engineer / Tech Lead — Game, Simulation &amp; Backend Systems</p><nav aria-label="Utility navigation"><a href="../../legal/">Legal</a> <a href="../../privacy/">Privacy</a> <a href="https://fr.linkedin.com/in/mathieulagarde" rel="me noreferrer">LinkedIn</a></nav></div></footer>
   </body>
 </html>
